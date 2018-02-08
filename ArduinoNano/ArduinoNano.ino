@@ -7,12 +7,16 @@
 
 #include <Wire.h>
 #include "RTClib.h"
+#include <SoftwareSerial.h>
 
+// GPIO
 #define SWITCH  13
-#define SLEEP   4
-#define MOSFET  6
+#define TX       4
+#define RX       3
+#define MOSFET   6
 
 RTC_DS3231 rtc;
+SoftwareSerial port(RX, TX); // RX and TX
 
 /* Time interval */
 int start_hour  = 8,  start_min = 30;
@@ -21,51 +25,68 @@ int end_hour    = 18, end_min   = 0;
 /* Programs Starts */
 void setup ()
 {
-  Serial.begin(9600);
-  Serial.println("START");
-  
+  Serial.begin(9600);       // DEBUG
+  Serial.println("START");  // DEBUG
+
+  // Start Serial COM with PI
+  port.begin(9600);
+
   Wire.begin();
-  
-  if (! rtc.begin()) {
+
+  if (! rtc.begin())
+  {
     Serial.println("Couldn't find RTC");
     while (1);
   }
 
-  if (rtc.lostPower()) {
+  /*
+    if (rtc.lostPower())
+    {
     Serial.println("RTC lost power, lets set the time!");
     // following line sets the RTC to the date & time this sketch was compiled
     rtc.adjust(DateTime(F(__DATE__), F(__TIME__)));
     // This line sets the RTC with an explicit date & time, for example to set
     // January 21, 2014 at 3am you would call:
     // rtc.adjust(DateTime(2014, 1, 21, 3, 0, 0));
-  }
-  
+    }
+  */
+
   pinMode(SWITCH, INPUT);
-  pinMode(SLEEP, OUTPUT);
   pinMode(MOSFET, OUTPUT);
 
-  // MOSFET is off
+  // MOSFET is off - PI is off
   digitalWrite(MOSFET, LOW);
-  // SLEEP signal is low
-  digitalWrite(SLEEP, LOW);
 }
 
-/* Programs Loop */
+/* Program Loop */
 void loop ()
 {
+  /* Variables */
   int start_time = get_start_time();
   int end_time = get_end_time();
   int current_time = get_current_time();
   int switch_pin = digitalRead(SWITCH);
-  Serial.println(current_time);
-  
+  Serial.println(current_time);           // DEBUG
+  String message;
+
+  /* Reporting time back to PI */
+  if (port.available())
+  {
+    message = port.readString();
+    if (message == "TIME")
+      // Sending the time
+      port.println(get_time_string());
+  }
+
+  /* Keeping track of shutdown cycle */
   if (current_time > start_time && current_time < end_time)
   {
     if (switch_pin) digitalWrite(MOSFET, HIGH);
   }
   else if (current_time > end_time)
   {
-    digitalWrite(SLEEP, HIGH);
+    /* Sending sleep command */
+    port.println("SLEEP");
     delay(60000);
     digitalWrite(MOSFET, LOW);
   }
@@ -94,5 +115,17 @@ int get_end_time ()
   int time_minutes;
   time_minutes = (end_hour * 60) + end_min;
   return time_minutes;
+}
+
+/* Return full date-time string */
+String get_time_string ()
+{
+  DateTime now = rtc.now();
+  String date_time =  String(now.year()) + "-";
+  date_time +=        String(now.month()) + "-";
+  date_time +=        String(now.day()) + "-";
+  date_time +=        String(now.hour()) + "-";
+  date_time +=        String(now.minute());
+  return date_time;
 }
 
