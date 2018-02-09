@@ -1,25 +1,12 @@
 import os
 from time import sleep
 from picamera import PiCamera
-import RPi.GPIO as GPIO
-import serial                   
 # run: sudo apt-get install python-serial
 # disable serial login shell
 
 # Setting parameters
 camera = PiCamera()
 camera.resolution = (1920, 1080)
-port = serial.Serial("/dev/ttyAMA0", baudrate=9600, timeout=1)
-
-# gets a time string over Serial COM from Arduino module
-def getTime (port):
-    time = "2018-02-07-22-15"
-    port.write("TIME")
-    time = port.readline()
-    # DEBUG
-    print(time)
-    array = time.split('-')
-    return array
 
 # keeping track of the time minute by minute
 def configureTime (_now):
@@ -40,7 +27,7 @@ hour = 3
 minute = 4
 
 # getting array with current data-time
-now = getTime(port)
+now = [2018, 2, 9, 15, 0]
 
 # Start recording
 camera.start_preview() # DEBUG
@@ -52,11 +39,10 @@ while(port.readline() != "SLEEP"):
     camera.annotate_text = now[year] + "/" + now[month] + "/" + now[day] + " " + now[hour] + ":" + now[minute]
     sleep(60)
     now = configureTime(now)
-    print(now[minute]) # DEBUG
 
 camera.stop_recording()
 camera.stop_preview() # DEBUG
-os.system("shutdown -t now")
+
 
 
 
