@@ -12,7 +12,7 @@
 // GPIO
 #define SWITCH  13
 #define TX       4
-#define RX       3
+#define RX       8
 #define MOSFET   6
 
 RTC_DS3231 rtc;
@@ -20,7 +20,7 @@ SoftwareSerial port(RX, TX); // RX and TX
 
 /* Time interval */
 int start_hour  = 8,  start_min = 30;
-int end_hour    = 18, end_min   = 0;
+int end_hour    = 20, end_min   = 0;
 
 /* Programs Starts */
 void setup ()
@@ -39,7 +39,7 @@ void setup ()
     while (1);
   }
 
-  /*
+  /* // UNCOMMENT TO SET TIME
     if (rtc.lostPower())
     {
     Serial.println("RTC lost power, lets set the time!");
@@ -66,31 +66,43 @@ void loop ()
   int end_time = get_end_time();
   int current_time = get_current_time();
   int switch_pin = digitalRead(SWITCH);
-  Serial.println(current_time);           // DEBUG
   String message;
 
   /* Reporting time back to PI */
   if (port.available())
   {
     message = port.readString();
+    Serial.println("GOT: " + message);
     if (message == "TIME")
+    {
       // Sending the time
       port.println(get_time_string());
+      Serial.println(get_time_string());
+    }
   }
 
   /* Keeping track of shutdown cycle */
   if (current_time > start_time && current_time < end_time)
   {
-    if (switch_pin) digitalWrite(MOSFET, HIGH);
+    if (switch_pin)
+    {
+      Serial.println("MOSFET ON");
+      digitalWrite(MOSFET, HIGH);
+    }
+    else
+    {
+      Serial.println("MOSFET OFF");
+      digitalWrite(MOSFET, LOW);
+    }
   }
   else if (current_time > end_time)
   {
     /* Sending sleep command */
     port.println("SLEEP");
+    Serial.println("Entering sleep mode");
     delay(60000);
     digitalWrite(MOSFET, LOW);
   }
-  delay(10000);
 }
 
 /* Returns current time */
