@@ -15,6 +15,7 @@
 #define RX       8
 #define MOSFET   6
 
+/* RTC object */
 RTC_DS3231 rtc;
 SoftwareSerial port(RX, TX); // RX and TX
 
@@ -31,8 +32,8 @@ void setup ()
   // Start Serial COM with PI
   port.begin(9600);
 
+  /* RTC Code */
   Wire.begin();
-
   if (! rtc.begin())
   {
     Serial.println("Couldn't find RTC");
@@ -61,18 +62,19 @@ void setup ()
 /* Program Loop */
 void loop ()
 {
-  /* Variables */
+  /* Getting Parameters */
   int start_time = get_start_time();
   int end_time = get_end_time();
   int current_time = get_current_time();
   int switch_pin = digitalRead(SWITCH);
   String message;
+  bool sent;
 
   /* Reporting time back to PI */
   if (port.available())
   {
     message = port.readString();
-    Serial.println("GOT: " + message);
+    Serial.println("GOT: " + message); // DEBUG
     if (message == "TIME")
     {
       // Sending the time
@@ -86,22 +88,24 @@ void loop ()
   {
     if (switch_pin)
     {
-      Serial.println("MOSFET ON");
+      Serial.println("MOSFET ON"); // DEBUG
       digitalWrite(MOSFET, HIGH);
     }
     else
     {
-      Serial.println("MOSFET OFF");
+      Serial.println("MOSFET OFF"); // DEBUG
       digitalWrite(MOSFET, LOW);
     }
+    sent = false;
   }
-  else if (current_time > end_time)
+  else if (current_time > end_time && sent == false)
   {
     /* Sending sleep command */
     port.println("SLEEP");
-    Serial.println("Entering sleep mode");
+    Serial.println("Entering sleep mode"); // DEBUG
     delay(60000);
     digitalWrite(MOSFET, LOW);
+    sent = true;
   }
 }
 

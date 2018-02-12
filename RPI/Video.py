@@ -8,7 +8,7 @@ import serial
 port = serial.Serial(
     port = "/dev/ttyS0",
     baudrate=9600,
-    timeout=1,
+    timeout=60,                    # port delay in seconds
     parity = serial.PARITY_NONE,
     bytesize = serial.EIGHTBITS,
     stopbits = serial.STOPBITS_ONE
@@ -17,15 +17,31 @@ port = serial.Serial(
 # gets a time string over Serial COM from Arduino module
 def getTime (port):
     time = "2018-02-07-22-15"
-    port.write("TIME")
+    port.write("TIME")              # Sending command to get Time
     time = port.readline()
-    time = time[:-2]
-    print(time)                 # DEBUG
-    array = time.split('-')
+    if (time != ""):
+        time = time[:-2]
+        print(time)                 # DEBUG
+        array = time.split('-')
+        # Converting to type string again with Zero fill
+        array = toInt(array)
+        array = toString(array)
     return array
+
+# Converts string array to int array
+def toInt (array):
+    for element in array:
+        element = int(element)
+
+# Converts int array to string array
+def toString (array):
+    for element in array:
+        element = str(element).zfill(2)
 
 # keeping track of the time minute by minute
 def configureTime (_now):
+    # Converting to type int
+    _now = toInt(_now)
     _now[minute] += 1
     if(_now[minute] > 60)
         _now[minute] -= 60
@@ -33,6 +49,7 @@ def configureTime (_now):
     if(_now[hour] > 24)
         _now[hour] -= 24
         _now[day] += 1
+    _now = toString(_now)
     return _now
 
 # this function returns True/False if Sleep command received
@@ -67,7 +84,7 @@ try:
     camera.annotate_text = now[year] + "/" + now[month] + "/" + now[day] + " " + now[hour] + ":" + now[minute]
     # Specifing output file
     camera.start_recording('/home/pi/Desktop/' + now[year] + "_" + now[month] + "_" + now[day] + '.h264')
-    # Starting a loop 
+    # Starting a loop and constantly checking for SLEEP command 
     while checkSleep() != True:
         camera.annotate_text = now[year] + "/" + now[month] + "/" + now[day] + " " + now[hour] + ":" + now[minute]
         configureTime(now)
