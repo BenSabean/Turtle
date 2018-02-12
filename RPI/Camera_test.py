@@ -8,7 +8,7 @@ import datetime as dt
     $ sudo apt-get install gpac
     $ MP4Box -add myvideo.h264 myvideo.mp4 && rm myvideo.h264
     to preview use :
-    omxplayer myvideo.mp4
+    $ omxplayer myvideo.mp4
 '''
 
 # Setting parameters

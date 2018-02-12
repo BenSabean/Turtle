@@ -1,8 +1,13 @@
 import os
 from time import sleep
 import serial                   
-# run: sudo apt-get install python-serial
-# disable serial login shell
+
+'''
+    $ sudo apt-get install python-serial
+    disable serial login shell from raspi-config
+    make sure serial 0 is enabled (ttyS0)
+    in /boot/config -> disable uart 1 enable 0
+'''
 
 # Setting parameters
 port = serial.Serial(
