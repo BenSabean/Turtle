@@ -36,6 +36,9 @@ void loop ()
   // Check Time
   if ( hours >= TIME_INTERVAL)
   {
+    // DEBUG
+    Serial.println("RELEASE");
+    // DEBUG
     digitalWrite(VALVE, HIGH);  // Trigger Release Valve
     while (1);                  // Mission accomplished
   }
