@@ -11,14 +11,14 @@ import serial
 
 ''' ----- METHODS ----- '''
 # file path to store GPS data
-path = "/home/pi/Video/usb/"
+path = "/home/pi/Turtle/RPI/GPStest/"
 
 # Send request and receive one set of GPS Data
 def port_getGPS(port):
     port.write("GPS")               # Send GPS command
     message = ""
     message = port.readline()
-    if (message != "" and message != "EOT"):
+    if (not (message == "") and not (message == "EOT")):
         port.write("OK")            # Handshake for data reception
         message = message[:-2]      # Clearing end of string garbage
     return message
@@ -50,10 +50,10 @@ def newDay(dateTime, oldDay):
 def openFile(_path):
     # if file is doesn't exist write headers and create file
     if (os.path.isfile(_path) == False):
-        file f = open(file_name, "w")
-        csv1.write("TimeStamp,Latitude,Longitude\n")
+        f = open(file_name, "w")
+        f.write("TimeStamp,Latitude,Longitude\n")
     else:
-        file f = open(file_name, "a")
+        f = open(file_name, "a")
     return f
 
 ''' ----- PARAMETERS & VARIABLES ----- '''
@@ -69,24 +69,24 @@ port = serial.Serial(
 message = "start"
 
 
- ''' ----- PROGRAM SETUP ----- '''
+''' ----- PROGRAM SETUP ----- '''
 # Getting date from Adruino
 message = port_getTime(port)
 date = message.split("_")
 # Creating file name for first GPS file
-file_name = path + date[0] + "_" + str(int(date[1])-1) + "_" + date[2] + ".csv"
-file csv1 = openFile(file_name)
+file_name = path + date[0] + "_" + date[1] + "_" + str(int(date[2])-1) + ".csv"
+csv1 = openFile(file_name)
 # Creating file name for second GPS file
 file_name = path + date[0] + "_" + date[1] + "_" + date[2] + ".csv"
-file csv2 = openFile(file_name)
+csv2 = openFile(file_name)
 
 
- ''' ----- PROGRAM LOOP ----- '''
+''' ----- PROGRAM LOOP ----- '''
 try:
     # loop untill the end of transmition
     while message != "EOT":
         message = port_getGPS(port)
-        if(message != "" and message != "EOT"):
+        if(not (message == "") and not (message == "EOT")):
             array = message.split(";")
             # GPS data went over 00:00 -> new file needs to be open
             if(newDay(array[0], str(int(date[1])-1)) == True):
@@ -94,6 +94,8 @@ try:
                 store_GPS(csv1, array[0], array[1], array[2])
             else:
                 store_GPS(csv2, array[0], array[1], array[2])
+
+        time.usleep(1000)
 
 finally:
     csv1.close()
