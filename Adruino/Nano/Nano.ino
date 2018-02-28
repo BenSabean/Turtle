@@ -15,7 +15,7 @@
 ///////////////////////////////////////////
 
 #define PI_BOOT_DELAY_S     60    // Delay for Pi to boot up In seconds
-#define PI_SHUTDOWN_DELAY_S 120   // Delay for Pi to shutdown In seconds
+#define PI_SHUTDOWN_DELAY_S 1     // Delay for Pi to shutdown In seconds
 
 #define SERIAL_RETRY        10    // Attemps to get serial value
 #define SERIAL_TIMEOUT_S    1     // Waiting time for response from Pi
@@ -35,6 +35,7 @@
 #define GPS_TX   2
 #define GPS_RX   3
 #define MOSFET   6
+#define PI_CHECK 8
 
 SoftwareSerial RPi(PI_RX, PI_TX);       // RX and TX for RPI COM
 SoftwareSerial GPS_COM(GPS_RX, GPS_TX); // RX and TX for GPS COM
@@ -50,6 +51,9 @@ volatile int Start = 480, End = 1080, Now = 481;
 
 /* GPS Data Containers */
 volatile float Long, Lat;
+
+/* Flag to tell when Pi is OFF */
+volatile bool Sleeping;
 
 ///////////////////////////////////////////
 //                                       //
@@ -67,8 +71,9 @@ void setup ()
   GPS_init();
   // GPIO setup
   pinMode(SWITCH, INPUT);
+  pinMode(PI_CHECK, INPUT);
   pinMode(MOSFET, OUTPUT);
-  // Turn Pi ON
+  // Turn Pi Power ON
   digitalWrite(MOSFET, HIGH);
   delay(PI_BOOT_DELAY_S * 1000);  // Delay for PI to turn on
   // Gets Time intervales from RPI
@@ -77,7 +82,6 @@ void setup ()
   Serial.println("Start = " + String(Start) + "\n" + "End = " + String(End));
   // DEBUG
 }
-
 
 
 ///////////////////////////////////////////
@@ -89,12 +93,15 @@ void loop ()
 {
   /* Variables */
   String message;
+  bool Pi_on = digitalRead(PI_CHECK);
 
   /* Body */
   GPS_update();
+
   // Check for messages from Pi
   if (RPi.available())
   {
+    // Get message
     message = RPi.readString();
 
     // Pi requested Time String
@@ -104,19 +111,30 @@ void loop ()
       send_RPi(get_time_string());
     }
     // Pi requested GPS
-    if (message == TIME_CMD)
+    if (message == GPS_CMD)
     {
       // GPS Format: int[Time]_float[Long]_float[Lat] (ex:820_104.44421_41.23342)
       send_RPi(String(Now) + DELIM + String(Long) + DELIM + String(Lat));
     }
-
-
   }
 
+  /* Sleep wake cycle */
+  if(!Pi_on)  // Pi is turned off
+  {
+    delay(PI_SHUTDOWN_DELAY_S*1000);
+    // Turn Pi Power OFF
+    digitalWrite(MOSFET, LOW);
 
+    // Time to wake up
+    if(Now > Start && Now < End)
+    {
+      // Turn Pi Power ON
+      digitalWrite(MOSFET, HIGH);
+      delay(PI_BOOT_DELAY_S * 1000);  // Delay for PI to turn on
+    }
 
-
-
+  }
+  
 }
 
 ///////////////////////////////////////////
@@ -206,7 +224,7 @@ void get_time_interval()
             Start = _start;
             End = _end;
             RPi.println(HANDSHAKE_CMD); // Letting Pi know we got data
-            return;
+            return; // break out of the loop
           }
         }
       }
