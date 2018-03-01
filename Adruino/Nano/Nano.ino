@@ -20,6 +20,8 @@
 #define SERIAL_RETRY        10    // Attemps to get serial value
 #define SERIAL_TIMEOUT_S    1     // Waiting time for response from Pi
 
+#define GPS_UPDATE_S       1      // GPS reading update interval 
+
 // Command list
 #define INTERVAL_CMD   "INTERVAL"
 #define HANDSHAKE_CMD  "OK"
@@ -37,6 +39,7 @@
 #define MOSFET   6
 #define PI_CHECK 8
 
+/* COM Setup */
 SoftwareSerial RPi(PI_RX, PI_TX);       // RX and TX for RPI COM
 SoftwareSerial GPS_COM(GPS_RX, GPS_TX); // RX and TX for GPS COM
 
@@ -51,9 +54,6 @@ volatile int Start = 480, End = 1080, Now = 481;
 
 /* GPS Data Containers */
 volatile float Long, Lat;
-
-/* Flag to tell when Pi is OFF */
-volatile bool Sleeping;
 
 ///////////////////////////////////////////
 //                                       //
@@ -76,13 +76,11 @@ void setup ()
   // Turn Pi Power ON
   digitalWrite(MOSFET, HIGH);
   delay(PI_BOOT_DELAY_S * 1000);  // Delay for PI to turn on
-  // Gets Time intervales from RPI
-  get_time_interval();
+
   // DEBUG
   Serial.println("Start = " + String(Start) + "\n" + "End = " + String(End));
   // DEBUG
 }
-
 
 ///////////////////////////////////////////
 //                                       //
@@ -93,23 +91,28 @@ void loop ()
 {
   /* Variables */
   String message;
-  bool Pi_on = digitalRead(PI_CHECK);
+  bool Awake = digitalRead(PI_CHECK);
+  bool Switch = digitalRead(SWITCH);
+  int gps_start = 1;
 
-  /* Body */
-  GPS_update();
+  // Update GPS values every interval
+  if((millis() - gps_start) > GPS_UPDATE_S*1000)
+  {
+    GPS_update();
+    gps_start = millis();
+  }
 
   // Check for messages from Pi
   if (RPi.available())
   {
-    // Get message
-    message = RPi.readString();
+    message = RPi.readString();    // Get message
 
+    // Pi submits Time Interval
+    if (message == TIME_INTERVAL) get_time_interval();
+ 
     // Pi requested Time String
-    if (message == TIME_CMD)
-    {
-      // Sending time
-      send_RPi(get_time_string());
-    }
+    if (message == TIME_CMD)      send_RPi(get_time_string());
+ 
     // Pi requested GPS
     if (message == GPS_CMD)
     {
@@ -118,23 +121,41 @@ void loop ()
     }
   }
 
-  /* Sleep wake cycle */
-  if(!Pi_on)  // Pi is turned off
+  // Checking for system ON/OFF switch first
+  if(Switch)
   {
-    delay(PI_SHUTDOWN_DELAY_S*1000);
-    // Turn Pi Power OFF
-    digitalWrite(MOSFET, LOW);
-
-    // Time to wake up
-    if(Now > Start && Now < End)
-    {
-      // Turn Pi Power ON
-      digitalWrite(MOSFET, HIGH);
-      delay(PI_BOOT_DELAY_S * 1000);  // Delay for PI to turn on
+    // Sleep wake cycle 
+    if(Awake)                // Pi is ON //
+    { // Time to Sleep
+      if(Now > End) send_RPi(SLEEP_CMD);
     }
-
+    else                     // Pi is OFF //  
+    {
+      delay(PI_SHUTDOWN_DELAY_S*1000);
+      // Turn Pi Power OFF
+      digitalWrite(MOSFET, LOW);
+      // Time to wake up
+      if(Now > Start && Now < End)
+      {
+        // Turn Pi Power ON
+        digitalWrite(MOSFET, HIGH);
+        delay(PI_BOOT_DELAY_S * 1000);  // Delay for PI to turn on
+      }
+    }
   }
-  
+  else  // Switch indicator is OFF
+  { 
+    if(Awake)                // Pi is ON //
+    { // Tell Pi to Sleep
+      send_RPi(SLEEP_CMD);
+    }
+    else                     // Pi is OFF //  
+    {
+      delay(PI_SHUTDOWN_DELAY_S*1000);
+      // Turn Pi Power OFF
+      digitalWrite(MOSFET, LOW);
+    }
+  }
 }
 
 ///////////////////////////////////////////
@@ -217,15 +238,12 @@ void get_time_interval()
         // DEBUG
         sscanf(message.c_str(), "%d_%d", &_start, &_end);
         // Error checking
-        if (_start > 0 && _start < 1439)
+        if (_start > 0 && _start < 1439 && _end > 0 && _end < 1439)
         {
-          if (_end > 0 && _end < 1439)
-          {
             Start = _start;
             End = _end;
             RPi.println(HANDSHAKE_CMD); // Letting Pi know we got data
             return; // break out of the loop
-          }
         }
       }
     }
