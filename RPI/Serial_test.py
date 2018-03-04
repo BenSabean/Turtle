@@ -1,13 +1,8 @@
 import os
 from time import sleep
 import serial                   
-
-'''
-    $ sudo apt-get install python-serial
-    disable serial login shell from raspi-config
-    make sure serial 0 is enabled (ttyS0)
-    in /boot/config -> disable uart 1 enable 0
-'''
+# run: sudo apt-get install python-serial
+# disable serial login shell
 
 # Setting parameters
 port = serial.Serial(
@@ -22,11 +17,12 @@ port = serial.Serial(
 message = "none"
 
 while(1):
-    message = "Send stuff Now"
+    message = "TIME"
     port.write(message)
     message = port.readline()
     if (message != ""):
         print(message[:-2])
+    sleep(1)
 
 
 

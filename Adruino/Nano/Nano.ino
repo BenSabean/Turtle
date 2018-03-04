@@ -96,7 +96,7 @@ void loop ()
   int gps_start = 1;
 
   // Update GPS values every interval
-  if((millis() - gps_start) > GPS_UPDATE_S*1000)
+  if ((millis() - gps_start) > GPS_UPDATE_S * 1000)
   {
     GPS_update();
     gps_start = millis();
@@ -108,11 +108,11 @@ void loop ()
     message = RPi.readString();    // Get message
 
     // Pi submits Time Interval
-    if (message == TIME_INTERVAL) get_time_interval();
- 
+    if (message == INTERVAL_CMD) get_time_interval();
+
     // Pi requested Time String
     if (message == TIME_CMD)      send_RPi(get_time_string());
- 
+
     // Pi requested GPS
     if (message == GPS_CMD)
     {
@@ -122,20 +122,20 @@ void loop ()
   }
 
   // Checking for system ON/OFF switch first
-  if(Switch)
+  if (Switch)
   {
-    // Sleep wake cycle 
-    if(Awake)                // Pi is ON //
+    // Sleep wake cycle
+    if (Awake)               // Pi is ON //
     { // Time to Sleep
-      if(Now > End) send_RPi(SLEEP_CMD);
+      if (Now > End) send_RPi(SLEEP_CMD);
     }
-    else                     // Pi is OFF //  
+    else                     // Pi is OFF //
     {
-      delay(PI_SHUTDOWN_DELAY_S*1000);
+      delay(PI_SHUTDOWN_DELAY_S * 1000);
       // Turn Pi Power OFF
       digitalWrite(MOSFET, LOW);
       // Time to wake up
-      if(Now > Start && Now < End)
+      if (Now > Start && Now < End)
       {
         // Turn Pi Power ON
         digitalWrite(MOSFET, HIGH);
@@ -144,14 +144,14 @@ void loop ()
     }
   }
   else  // Switch indicator is OFF
-  { 
-    if(Awake)                // Pi is ON //
+  {
+    if (Awake)               // Pi is ON //
     { // Tell Pi to Sleep
       send_RPi(SLEEP_CMD);
     }
-    else                     // Pi is OFF //  
+    else                     // Pi is OFF //
     {
-      delay(PI_SHUTDOWN_DELAY_S*1000);
+      delay(PI_SHUTDOWN_DELAY_S * 1000);
       // Turn Pi Power OFF
       digitalWrite(MOSFET, LOW);
     }
@@ -240,10 +240,10 @@ void get_time_interval()
         // Error checking
         if (_start > 0 && _start < 1439 && _end > 0 && _end < 1439)
         {
-            Start = _start;
-            End = _end;
-            RPi.println(HANDSHAKE_CMD); // Letting Pi know we got data
-            return; // break out of the loop
+          Start = _start;
+          End = _end;
+          RPi.println(HANDSHAKE_CMD); // Letting Pi know we got data
+          return; // break out of the loop
         }
       }
     }

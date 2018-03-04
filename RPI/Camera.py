@@ -25,15 +25,7 @@ print("Recording Time: ", sys.argv[2])
 recording_time = int(sys.argv[2])  # recording time in seconds
 
 try:
-    # Setting parameters
-    camera.resolution = (1640, 922) # (1280x720)fullFoV (1640x922)16:9
-    camera.framerate = 25
-    camera.rotation = 180
-    # Start recording
-    camera.annotate_background = picamera.Color('black')
-    camera.annotate_text = dt.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
-    
-    # Try to setg current time as time recieved from Arduino
+    # Try to set current time as time recieved from Arduino
     # or set to system time if resonse was corrupted
     try:
         currentTime = datetime.strptime(sys.argv[1], '%Y_%m_%d_%H:%M:%S')
@@ -41,23 +33,32 @@ try:
         print(e)
         currentTime = dt.datetime.now()
     print(currentTime)
+    # Setting parameters
+    camera.resolution = (1640, 922) # (1280x720)fullFoV (1640x922)16:9
+    camera.framerate = 25
+    camera.rotation = 180
+    # Start recording
+    camera.annotate_background = picamera.Color('black')
+    camera.annotate_text = currentTime.strftime('%Y-%m-%d %H:%M:%S')
 
     # Specifing output file
     camera.start_recording('/home/pi/Turtle/RPI/USB/' +
-                           str(currentTime).replace(' ', '-') + '.h264')
+                           str(str(currentTime).replace(' ', '_') + '.h264').replace(':','-'))
         
     start = dt.datetime.now()
     while (dt.datetime.now() - start).seconds < (recording_time):
-        camera.annotate_text = dt.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
-        camera.wait_recording(0.2)
-    # Finish recording
-    camera.stop_recording()
+        currentTime = currentTime + dt.timedelta(0,1)
+        camera.annotate_text = currentTime.strftime('%Y-%m-%d %H:%M:%S')
+        camera.wait_recording(1)
+        
 except Exception as e:
     f = open("/home/pi/Turtle/RPI/error.log", "w")
     f.write(str(e))
     f.close()
     print(e)
 finally:
+    # Finish recording
+    camera.stop_recording()
     camera.close()
 
 

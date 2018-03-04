@@ -11,7 +11,7 @@ import datetime as dt
     omxplayer myvideo.mp4
 '''
 
-recording_time = 60*60*2  # recording time in seconds
+recording_time = 30 #60*60*12  # recording time in seconds
 
 # Setting parameters
 camera = picamera.PiCamera()
@@ -19,7 +19,7 @@ try:
     # Setting parameters
     camera.resolution = (1640, 922) # (1280x720)fullFoV (1640x922)16:9
     camera.framerate = 25
-    #camera.rotation = 180
+    camera.rotation = 180
     # Start recording
     # camera.start_preview()
     camera.annotate_background = picamera.Color('black')
