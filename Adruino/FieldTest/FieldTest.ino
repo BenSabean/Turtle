@@ -62,13 +62,13 @@ void setup ()
   Serial.begin(115200);       // DEBUG
   Serial.println("START");    // DEBUG
   // Start Serial COM with PI
-  RPi.begin(9600);
+  RPi.begin(56700);
 
   /* RTC Code */
   Wire.begin();
   if (! rtc.begin())
   {
-    Serial.println("Couldn't find RTC");
+    //Serial.println("Couldn't find RTC");
     while (1);
   }
   // Uncomment to set Time for RTC
@@ -79,7 +79,7 @@ void setup ()
   pinMode(PI_CHECK, INPUT);
   pinMode(MOSFET, OUTPUT);
 
-  digitalWrite(MOSFET, LOW);
+  digitalWrite(MOSFET, HIGH);
 }
 
 ///////////////////////////////////////////
@@ -90,7 +90,7 @@ void setup ()
 void loop ()
 {
   /* Variables */
-  String message;
+  char message[100], slong[10], slat[10];  memset(message, NULL, 100);
   bool Awake = digitalRead(PI_CHECK);
   bool Switch = digitalRead(SWITCH);
   DateTime now = rtc.now();
@@ -99,76 +99,80 @@ void loop ()
   //-------- Check for messages from Pi -------
   if (RPi.available())
   {
-    message = RPi.readString();     // Get message
-    Serial.println("GOT: " + message);
+    // Reading new message
+    readString(message, sizeof(message));
 
-    if (message.substring(0, sizeof(INTERVAL_CMD) - 1) == INTERVAL_CMD)
+    Serial.print("GOT: "); Serial.println(message);
+
+    if (strcmp(message, INTERVAL_CMD) == 0)
     {
       get_time_interval(message);   // Pi submits Time Interval
       // DEBUG
       Serial.println("Start = " + String(Start) + " Now = " + String(Now) + " End = " + String(End));
       // DEBUG
     }
-    if (message == TIME_CMD)
+    else if (strcmp(message, TIME_CMD) == 0)
     {
-      send_RPi(get_time_string());  // Pi requested Time String
+      get_time_string(message);
+      send_RPi(message);  // Pi requested Time String
     }
-    if (message == GPS_CMD)
+    else if (strcmp(message, GPS_CMD) == 0)
     {
       // GPS Format: int[Time]_float[Long]_float[Lat] (ex:820_104.44421_41.23342)
-      send_RPi(String(Now) + DELIM + String(Long) + DELIM + String(Lat));
+      dtostrf(Long, 10, 7, slong);
+      dtostrf(Lat, 10, 7, slat);
+      sprintf(message, "%d_%s_%s", Now, slong, slat);
+      send_RPi(message);
     }
   }
   //--------------------------------------------
 
-
   //-------------- Mission Timing --------------
 
-  if (Switch) // SWITCH ON //
+  if (Switch)   // 1. SWITCH ON //
   {
-    // *** Pi is ON *** //
-    if (Awake)
+    if (Awake)      // 2. Pi is ON //
     {
-      if (Now > End)
+      // 3. Time to Sleep //
+      if (Now > End || Now < Start)
       { // SLEEP YES //
         Serial.println("Sending SLEEP");
         send_RPi(SLEEP_CMD);
         delay(1 * 1000);
       }
-      else
-      { // Turn Pi Power ON
-        digitalWrite(MOSFET, HIGH);
+      else // 3. Time to be Awake //
+      {
+        digitalWrite(MOSFET, LOW); // Turn Pi Power ON
       }
     }
-    else // ** Pi is OFF ** //
+    else            // 2. Pi is OFF //
     {
-      // Time to wake up
+      // 3. Time to WakeUp //
       if (Now > Start && Now < End)
       {
-        // SLEEP NO //
         // Turn Pi Power ON
-        digitalWrite(MOSFET, HIGH);
-      }
-      else
-      { // SLEEP YES //
-        // Turn Pi Power OFF
         digitalWrite(MOSFET, LOW);
+      }
+      else  // 3. Time to Sleep //
+      {
+        // Turn Pi Power OFF
+        digitalWrite(MOSFET, HIGH);
+
       }
     }
   }// -----------------------
-  else  // SWITCH OFF //
+  else  // 1. SWITCH OFF //
   {
-    if (Awake)               // Pi is ON //
+    if (Awake)     // 2. Pi is ON //
     { // Tell Pi to Sleep
       // DEBUG
       Serial.println("Sending SLEEP");
       send_RPi(SLEEP_CMD);
       delay(1 * 1000);
     }
-    else                     // Pi is OFF //
+    else            // 2. Pi is OFF //
     {
-      // Turn Pi Power OFF
-      digitalWrite(MOSFET, LOW);
+      digitalWrite(MOSFET, HIGH);
     }
   }
   //--------------------------------------------
@@ -184,15 +188,13 @@ void loop ()
   Sends command and receives start-end times
   Format: INTERVAL_[FIRST]_[SECOND] in minutes (ex: 480_1439)
 */
-int get_time_interval(String message)
+int get_time_interval(char* message)
 {
   int _start, _end;
-  char *p;
 
-  strtok(message.c_str(), "_");
+  strtok(message, "_");
   sscanf(strtok(NULL, "_"), "%d", &_start);
   sscanf(strtok(NULL, "_"), "%d", &_end);
-  Serial.println(String(_start) + "_" + String(_end));
 
   // Error checking
   if (_start > 0 && _start < 1439 && _end > 0 && _end < 1439)
@@ -210,10 +212,10 @@ int get_time_interval(String message)
   0 - HandShake success
   1 - HandShake failed
 */
-void send_RPi(String _msg)
+void send_RPi(char* _msg)
 {
   unsigned long _strt, _delta;
-  String message;
+  char message[10];
 
   for (uint8_t i = 0; i < SERIAL_RETRY; i++)
   {
@@ -225,8 +227,8 @@ void send_RPi(String _msg)
     {
       if (RPi.available())
       {
-        message = RPi.readString();
-        if (message == HANDSHAKE_CMD) break;
+        readString(message, 10);
+        if (strcmp(message, HANDSHAKE_CMD) == 0) break;
       }
       _delta = abs(millis() - _strt);
     }
@@ -237,11 +239,10 @@ void send_RPi(String _msg)
   Returns a Date-Time String
   Format: YYYY_MM_DD_hh_mm
 */
-String get_time_string()
+void get_time_string(char* buff)
 {
   DateTime now = rtc.now();
-  return String(String(now.year()) + "_" + String(now.month()) + "_"
-                + String(now.day()) + "_" + String(now.hour()) + ":" + String(now.minute()) + ":" + String(now.second()));
+  sprintf(buff, "%d_%d_%d_%d:%d:%d", now.year(), now.month(), now.day(), now.hour(), now.minute(), now.second());
 }
 
 /*
@@ -259,3 +260,13 @@ void setTime()
     // rtc.adjust(DateTime(2014, 1, 21, 3, 0, 0));
   }
 }
+
+/*
+   Function to read incomming serial string
+*/
+void readString (char* buff, int len)
+{
+  for (uint8_t i = 0; (RPi.available() > 0) && i < len; i++)
+    buff[i] = RPi.read();
+}
+
