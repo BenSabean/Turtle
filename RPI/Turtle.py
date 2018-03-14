@@ -6,7 +6,7 @@ import signal
 import json
 import sys
 import RPi.GPIO as GPIO
-import datetime as dt
+import logging
 # run: sudo apt-get install python-serial
 # disable serial login shell
 
@@ -23,6 +23,7 @@ def write(msg):
         resp = port.readline()[:-2]
         if(not (resp == "")):
             return resp
+    logging.debug("Serial not found")
     return "None"
 
 # Create default mission values in case
@@ -32,101 +33,107 @@ DURATION = 28800 #8 hours
 START = "8:00"
 FINISH = "16:00"
 RETRY = 5
-LOG = "Turtle.log"
-PATH = "/home/pi/Turtle/RPI/"
-# Commands
+
 TIME = "TIME"
 ACK = "OK"
 INTERVAL = "INTERVAL"
 SLEEP = "SLEEP"
+SD_WAIT_S = 90
 
-# Setting alive pin to signal Waking up
+# Setting Alive pin HIGH
 GPIO.setmode(GPIO.BCM)
 GPIO.setwarnings(False)
 GPIO.setup(16, GPIO.OUT)
 GPIO.output(16, GPIO.HIGH)
 
-# Set communication parameters    
+# Waiting for SD card to mount properly
+sleep(SD_WAIT_S)
+
+# Unmonting USB and removing files
+os.system("sudo umount /dev/sda1")
+os.system("sudo rm /home/pi/Turtle/RPI/USB/*")
+
+# Mounting USB
+os.system("sudo mount /dev/sda1 /home/pi/Turtle/RPI/USB")
+logging.basicConfig(filename="/home/pi/Turtle/RPI/USB/turtle.log", format="%(asctime)s %(message)s", level=logging.DEBUG)
+
+# Attempt to get mission data from JSON file
+try:
+    with open('/home/pi/Turtle/RPI/USB/mission.txt') as json_data_file:
+        mission = json.load(json_data_file)
+    START = str(mission["start"])
+    FINISH = str(mission["end"])
+except Exception as e:
+    logging.debug(str(e))
+
+# Set communication parameters
 port = serial.Serial(
     port = "/dev/ttyS0",
-    baudrate=57600,
+    baudrate=74880,
     timeout=2,
     parity = serial.PARITY_NONE,
     bytesize = serial.EIGHTBITS,
     stopbits = serial.STOPBITS_ONE
 )
 
-# Waiting for system to fully boot
-sleep(90)
+logging.info("TURTLE CODE STARTED")
 
-# Unmounting USB and removing cleaning files
-os.system("sudo umount /dev/sda1")
-os.system("sudo rm " + PATH + "USB/*")
-
-# Attempt to get mission data from JSON file
-try:
-    with open(PATH + 'USB/mission.txt') as json_data_file:
-        mission = json.load(json_data_file)
-        START = str(mission["start"])
-        FINISH = str(mission["end"])
-# Log error on failure
-except Exception as e:
-    print(str(e))
-    log = open(PATH + LOG, "a")
-    log.write(dt.datetime.now().strftime('%Y-%m-%d %H:%M:%S') + " -> Cannot read mission file\n")
-    log.close()
-    
-# Getting Start - End times
+# Send startup command to Arduino
+# Get Start recording time
 hour,minute = START.split(":")
-startMin = int(hour)*60 + int(minute)
+sTime = int(hour)*60 + int(minute)
+# Get End recording time
 hour,minute = FINISH.split(":")
-endMin = int(hour)*60 + int(minute)
-
-# Calculating video duration
-DURATION = (startMin - endMin) * 60
+eTime = int(hour)*60 + int(minute)
+# Get Video Duration
+DURATION = (eTime - sTime) * 60
 print("Recording Time: ", DURATION)
-
-# Sending Recording intervals to Arduino
-print(write(INTERVAL + '_' + str(startMin) + '_' + str(endMin))
-sleep(0.5)
-
-# Sending Time to Arduino
+logging.info("Recording Time: " + str(DURATION))
+logging.info('INTERVAL ' + str(sTime) + '_' + str(eTime))
+# Send time Interval to Arduino
+print( write(INTERVAL + '_' + str(sTime) + '_' + str(eTime)) )
+sleep(1)
+# Get current time from Arduino
 message = write(TIME)
-sleep(0.5)
+sleep(1)
 port.write(ACK)
-
-# If Arduino Failed to send us time
-if message == "None":
-    message = dt.datetime.now().strftime('%Y-%m-%d_%H-%M-%S')
 print("TIME: " + message)
+logging.info("TIME: " + message)
 
 # Spawn Camera.py as child process
-proc = subprocess.Popen(['python', PATH + 'Camera.py', str(message), str(DURATION)],
+proc = subprocess.Popen(['python','/home/pi/Turtle/RPI/Camera.py', str(message), str(DURATION)],
                         stdout = subprocess.PIPE,
                         stderr = subprocess.STDOUT)
 print("Child PID: ",proc.pid)
+logging.info("Child PID: " + str(proc.pid))
 sleep(1)
 
 # Listen for Commands from Arduino
-print("STARTING LOOP")
+print("START")
+logging.info("Listening for commands from controller")
 poll = proc.poll()
 while poll == None:
     poll = proc.poll()
-    message = ""
     message = port.readline()[:-2]
     if(message != ""):
         print("GOT: " + message)
+        logging.info("GOT: " + str(message))
     if(message == SLEEP):
-        port.write(ACK)
         print("Shutting down")
+        port.write(ACK)
         proc.terminate()
         sleep(2)
+	print('GOT SLEEP DONE RECORDING')
+        logging.info("Sleep command recieved. Shutting down")
         #os.system("sudo shutdown -h now")
-        os.system("python " + PATH + "off.py")
+        #os.system("python /home/pi/Turtle/RPI/off.py")
         sys.exit()
 
-# Tell Arduino that RPI is ready to turn off 
+# Tell Arduino that RPI is ready to turn off
+#os.system("sudo shutdown -h now")
 port.write("DONE")
+logging.info('EXIT TURTLE RECORDING')
+
 
 
 

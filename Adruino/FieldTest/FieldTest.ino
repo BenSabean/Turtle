@@ -17,7 +17,7 @@
 ///////////////////////////////////////////
 
 #define PI_BOOT_DELAY_S     1     // Delay for Pi to boot up In seconds
-#define PI_SHUTDOWN_DELAY_S 1     // Delay for Pi to shutdown In seconds
+#define PI_SHUTDOWN_DELAY_S 2     // Delay for Pi to shutdown In seconds
 
 #define SERIAL_RETRY        5     // Attemps to get serial value
 #define SERIAL_TIMEOUT_S    1     // Waiting time for response from Pi
@@ -62,7 +62,7 @@ void setup ()
   Serial.begin(115200);       // DEBUG
   Serial.println("START");    // DEBUG
   // Start Serial COM with PI
-  RPi.begin(56700);
+  RPi.begin(38400);
 
   /* RTC Code */
   Wire.begin();
@@ -90,7 +90,7 @@ void setup ()
 void loop ()
 {
   /* Variables */
-  char message[100], slong[10], slat[10];  memset(message, NULL, 100);
+  char message[50], slong[10], slat[10];  memset(message, NULL, sizeof(message));
   bool Awake = digitalRead(PI_CHECK);
   bool Switch = digitalRead(SWITCH);
   DateTime now = rtc.now();
@@ -104,7 +104,7 @@ void loop ()
 
     Serial.print("GOT: "); Serial.println(message);
 
-    if (strcmp(message, INTERVAL_CMD) == 0)
+    if (strstr(message, INTERVAL_CMD) != NULL)
     {
       get_time_interval(message);   // Pi submits Time Interval
       // DEBUG
@@ -156,6 +156,7 @@ void loop ()
       else  // 3. Time to Sleep //
       {
         // Turn Pi Power OFF
+        delay(PI_SHUTDOWN_DELAY_S * 1000);
         digitalWrite(MOSFET, HIGH);
 
       }
@@ -172,6 +173,7 @@ void loop ()
     }
     else            // 2. Pi is OFF //
     {
+      delay(PI_SHUTDOWN_DELAY_S * 1000);
       digitalWrite(MOSFET, HIGH);
     }
   }
@@ -212,27 +214,34 @@ int get_time_interval(char* message)
   0 - HandShake success
   1 - HandShake failed
 */
-void send_RPi(char* _msg)
+int send_RPi(char* _msg)
 {
-  unsigned long _strt, _delta;
+
+  unsigned long startTime, whenToStop = startTime + 60000;
+   
+  if (millis () >= whenToStop){
+  // do something
+  }
+  
   char message[10];
+  bool done = false;
 
   for (uint8_t i = 0; i < SERIAL_RETRY; i++)
   {
     RPi.println(_msg);    // Send Data command
     // Waiting for handshake
-    _strt = millis();
-    _delta = millis() - _strt;
-    while (_delta < (SERIAL_TIMEOUT_S * 1000))
+    startTime = millis ();
+    whenToStop = startTime + (SERIAL_TIMEOUT_S * 1000);
+    while (millis() < whenToStop && done == false)
     {
-      if (RPi.available())
+      if (RPi.available() > 0)
       {
         readString(message, 10);
-        if (strcmp(message, HANDSHAKE_CMD) == 0) break;
+        if (strcmp(message, HANDSHAKE_CMD) == 0) done = true;;
       }
-      _delta = abs(millis() - _strt);
     }
   }
+  return 1;
 }
 
 /*
@@ -242,7 +251,7 @@ void send_RPi(char* _msg)
 void get_time_string(char* buff)
 {
   DateTime now = rtc.now();
-  sprintf(buff, "%d_%d_%d_%d:%d:%d", now.year(), now.month(), now.day(), now.hour(), now.minute(), now.second());
+  sprintf(buff, "%d_%d_%d_%02d:%02d:%02d", now.year(), now.month(), now.day(), now.hour(), now.minute(), now.second());
 }
 
 /*
@@ -250,15 +259,15 @@ void get_time_string(char* buff)
 */
 void setTime()
 {
-  if (rtc.lostPower())
-  {
-    Serial.println("RTC lost power, lets set the time!");
-    // following line sets the RTC to the date & time this sketch was compiled
-    rtc.adjust(DateTime(F(__DATE__), F(__TIME__)));
-    // This line sets the RTC with an explicit date & time, for example to set
-    // January 21, 2014 at 3am you would call:
-    // rtc.adjust(DateTime(2014, 1, 21, 3, 0, 0));
-  }
+  //if (rtc.lostPower())
+  //{
+  //  Serial.println("RTC lost power, lets set the time!");
+  // following line sets the RTC to the date & time this sketch was compiled
+  rtc.adjust(DateTime(F(__DATE__), F(__TIME__)));
+  // This line sets the RTC with an explicit date & time, for example to set
+  // January 21, 2014 at 3am you would call:
+  // rtc.adjust(DateTime(2014, 1, 21, 3, 0, 0));
+  //}
 }
 
 /*
@@ -266,7 +275,7 @@ void setTime()
 */
 void readString (char* buff, int len)
 {
-  for (uint8_t i = 0; (RPi.available() > 0) && i < len; i++)
+  for (int i = 0; (RPi.available() > 0) && i < len; i++)
     buff[i] = RPi.read();
 }
 
