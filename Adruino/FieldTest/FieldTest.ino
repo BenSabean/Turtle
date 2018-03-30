@@ -20,7 +20,7 @@
 #define PI_SHUTDOWN_DELAY_S 2     // Delay for Pi to shutdown In seconds
 
 #define SERIAL_RETRY        5     // Attemps to get serial value
-#define SERIAL_TIMEOUT_S    1     // Waiting time for response from Pi
+#define SERIAL_TIMEOUT_S    2     // Waiting time for response from Pi
 
 // Command list
 #define INTERVAL_CMD   "INTERVAL"
@@ -46,7 +46,7 @@ RTC_DS3231 rtc;
 /* Time interval */
 // In Minutes (H*60 + M)
 // Default 8:00 to 18:00
-volatile int Start = 480, End = 1439, Now = 481;
+volatile int Start = 480, End = 1400, Now = 481;
 
 /* GPS Data Containers */
 volatile float Long = 0, Lat = 0;
@@ -62,13 +62,13 @@ void setup ()
   Serial.begin(115200);       // DEBUG
   Serial.println("START");    // DEBUG
   // Start Serial COM with PI
-  RPi.begin(38400);
+  RPi.begin(9600);
 
   /* RTC Code */
   Wire.begin();
   if (! rtc.begin())
   {
-    //Serial.println("Couldn't find RTC");
+    Serial.println("Couldn't find RTC");
     while (1);
   }
   // Uncomment to set Time for RTC
@@ -91,10 +91,10 @@ void loop ()
 {
   /* Variables */
   char message[50], slong[10], slat[10];  memset(message, NULL, sizeof(message));
-  bool Awake = digitalRead(PI_CHECK);
-  bool Switch = digitalRead(SWITCH);
-  DateTime now = rtc.now();
-  Now = now.hour() * 60 + now.minute();
+  bool Awake = digitalRead(PI_CHECK);     // Get Pi status
+  bool Switch = digitalRead(SWITCH);      // Get ]Switch status
+  DateTime now = rtc.now();               // Get current time
+  Now = now.hour() * 60 + now.minute();   // Convert to hours
 
   //-------- Check for messages from Pi -------
   if (RPi.available())
@@ -108,7 +108,7 @@ void loop ()
     {
       get_time_interval(message);   // Pi submits Time Interval
       // DEBUG
-      Serial.println("Start = " + String(Start) + " Now = " + String(Now) + " End = " + String(End));
+      //Serial.println("Start = " + String(Start) + " Now = " + String(Now) + " End = " + String(End));
       // DEBUG
     }
     else if (strcmp(message, TIME_CMD) == 0)
@@ -138,7 +138,7 @@ void loop ()
       { // SLEEP YES //
         Serial.println("Sending SLEEP");
         send_RPi(SLEEP_CMD);
-        delay(1 * 1000);
+        delay(2 * 1000);
       }
       else // 3. Time to be Awake //
       {
@@ -169,7 +169,7 @@ void loop ()
       // DEBUG
       Serial.println("Sending SLEEP");
       send_RPi(SLEEP_CMD);
-      delay(1 * 1000);
+      delay(2 * 1000);
     }
     else            // 2. Pi is OFF //
     {
@@ -216,28 +216,22 @@ int get_time_interval(char* message)
 */
 int send_RPi(char* _msg)
 {
-
-  unsigned long startTime, whenToStop = startTime + 60000;
-   
-  if (millis () >= whenToStop){
-  // do something
-  }
-  
+  unsigned long whenToStop;
   char message[10];
+  memset(message, '\0', sizeof(message));
   bool done = false;
 
-  for (uint8_t i = 0; i < SERIAL_RETRY; i++)
+  for (uint8_t i = 0; (i < SERIAL_RETRY) && (done == false); i++)
   {
     RPi.println(_msg);    // Send Data command
     // Waiting for handshake
-    startTime = millis ();
-    whenToStop = startTime + (SERIAL_TIMEOUT_S * 1000);
-    while (millis() < whenToStop && done == false)
+    whenToStop = millis () + (SERIAL_TIMEOUT_S * 1000);
+    while ( (millis() < whenToStop) && (done == false) )
     {
       if (RPi.available() > 0)
       {
         readString(message, 10);
-        if (strcmp(message, HANDSHAKE_CMD) == 0) done = true;;
+        if (strcmp(message, HANDSHAKE_CMD) == 0) done = true;
       }
     }
   }
@@ -251,7 +245,7 @@ int send_RPi(char* _msg)
 void get_time_string(char* buff)
 {
   DateTime now = rtc.now();
-  sprintf(buff, "%d_%d_%d_%02d:%02d:%02d", now.year(), now.month(), now.day(), now.hour(), now.minute(), now.second());
+  sprintf(buff, "%04d_%02d_%02d_%02d:%02d:%02d", now.year(), now.month(), now.day(), now.hour(), now.minute(), now.second());
 }
 
 /*
@@ -275,7 +269,8 @@ void setTime()
 */
 void readString (char* buff, int len)
 {
-  for (int i = 0; (RPi.available() > 0) && i < len; i++)
-    buff[i] = RPi.read();
+  String msg;
+  msg = RPi.readString();
+  strcpy(buff, msg.c_str());
 }
 

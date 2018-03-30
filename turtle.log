@@ -1,0 +1,362 @@
+2018-03-20 13:43:03,230 No JSON object could be decoded
+
+2018-03-20 13:43:03,234 TURTLE CODE STARTED
+
+2018-03-20 13:43:03,240 Recording Time: 28800
+
+2018-03-20 13:43:03,241 INTERVAL 480_960
+
+2018-03-20 13:43:04,770 TIME: 2018_03_20_13:42:53
+
+2018-03-20 13:43:04,783 Child PID: 736
+
+2018-03-20 13:43:05,790 Listening for commands from controller
+
+//
+2018-03-20 13:43:05,240 CAMERA STARTED
+
+2018-03-20 13:43:05,242 TIME: 2018_03_20_13:42:53
+
+2018-03-20 13:43:05,242 Recording Time: 28800
+
+
+// --------------------------------------------------------------
+2018-03-20 13:53:33,109 TURTLE CODE STARTED
+
+2018-03-20 13:53:33,112 Recording Time: 3600
+
+2018-03-20 13:53:33,113 INTERVAL 840_900
+
+2018-03-20 13:53:44,133 Serial not found
+
+2018-03-20 13:53:44,635 TIME: None
+
+2018-03-20 13:53:44,644 Child PID: 614
+
+2018-03-20 13:53:45,647 Listening for commands from controller
+
+//
+2018-03-20 13:53:45,157 CAMERA STARTED
+
+2018-03-20 13:53:45,159 TIME: None
+
+2018-03-20 13:53:45,159 Recording Time: 3600
+
+2018-03-20 13:53:45,652 time data 'None' does not match format '%Y_%m_%d_%H:%M:%S'
+
+
+// --------------------------------------------------------------
+2018-03-20 13:58:59,382 TURTLE CODE STARTED
+
+2018-03-20 13:58:59,385 Recording Time: 3600
+
+2018-03-20 13:58:59,386 INTERVAL 840_900
+
+2018-03-20 13:59:00,896 TIME: SLEEP
+
+2018-03-20 13:59:00,905 Child PID: 617
+
+2018-03-20 13:59:01,908 Listening for commands from controller
+
+//
+2018-03-20 13:59:01,635 CAMERA STARTED
+
+2018-03-20 13:59:01,637 TIME: SLEEP
+
+2018-03-20 13:59:01,638 Recording Time: 3600
+
+//
+2018-03-20 13:59:01,910 GOT: SLEEP
+
+2018-03-20 13:59:01,911 Sleep command recieved. Shutting down
+
+2018-03-20 13:59:01,912 EXIT TURTLE RECORDING
+
+
+// --------------------------------------------------------------
+2018-03-20 14:02:52,822 TURTLE CODE STARTED
+
+2018-03-20 14:02:52,830 Recording Time: 3600
+
+2018-03-20 14:02:52,834 INTERVAL 840_900
+
+2018-03-20 14:02:54,368 TIME: 2018_03_20_14:02:43
+
+2018-03-20 14:02:54,382 Child PID: 631
+
+2018-03-20 14:02:55,388 Listening for commands from controller
+
+//
+2018-03-20 14:02:55,099 CAMERA STARTED
+
+2018-03-20 14:02:55,101 TIME: 2018_03_20_14:02:43
+
+2018-03-20 14:02:55,102 Recording Time: 3600
+
+//
+2018-03-20 15:01:10,566 GOT: SLEEP
+
+2018-03-20 15:01:10,574 Sleep command recieved. Shutting down
+
+2018-03-20 15:01:10,583 EXIT TURTLE RECORDING
+
+
+// --------------------------------------------------------------
+2018-03-20 15:13:17,870 TURTLE CODE STARTED
+
+2018-03-20 15:13:17,877 Recording Time: 3600
+
+2018-03-20 15:13:17,878 INTERVAL 920_980
+
+2018-03-20 15:13:19,404 TIME: SLEEP
+
+2018-03-20 15:13:19,418 Child PID: 632
+
+2018-03-20 15:13:20,424 Listening for commands from controller
+
+//
+2018-03-20 15:13:20,137 CAMERA STARTED
+
+2018-03-20 15:13:20,139 TIME: SLEEP
+
+2018-03-20 15:13:20,140 Recording Time: 3600
+
+//
+2018-03-20 15:13:20,430 GOT: SLEEP
+
+2018-03-20 15:13:20,436 Sleep command recieved. Shutting down
+
+2018-03-20 15:13:20,440 EXIT TURTLE RECORDING
+
+
+// --------------------------------------------------------------
+2018-03-20 15:24:51,139 TURTLE CODE STARTED
+
+2018-03-20 15:24:51,144 Recording Time: 3600
+
+2018-03-20 15:24:51,144 INTERVAL 920_980
+
+2018-03-20 15:24:52,674 TIME: 2018_03_20_15:24:41
+
+2018-03-20 15:24:52,687 Child PID: 630
+
+2018-03-20 15:24:53,694 Listening for commands from controller
+
+//
+2018-03-20 15:24:53,410 CAMERA STARTED
+
+2018-03-20 15:24:53,412 TIME: 2018_03_20_15:24:41
+
+2018-03-20 15:24:53,412 Recording Time: 3600
+
+//
+2018-03-20 16:21:10,568 GOT: SLEEP
+
+2018-03-20 16:21:10,578 Sleep command recieved. Shutting down
+
+2018-03-20 16:21:10,585 EXIT TURTLE RECORDING
+
+
+// --------------------------------------------------------------
+2018-03-20 16:23:07,180 TURTLE CODE STARTED
+
+2018-03-20 16:23:07,185 Recording Time: 43200
+
+2018-03-20 16:23:07,185 INTERVAL 615_1335
+
+2018-03-20 16:23:08,708 TIME: SLEEP
+
+2018-03-20 16:23:08,721 Child PID: 633
+
+2018-03-20 16:23:09,728 Listening for commands from controller
+
+//
+2018-03-20 16:23:09,443 CAMERA STARTED
+
+2018-03-20 16:23:09,445 TIME: SLEEP
+
+2018-03-20 16:23:09,446 Recording Time: 43200
+
+//
+2018-03-20 16:23:09,734 GOT: SLEEP
+
+2018-03-20 16:23:09,740 Sleep command recieved. Shutting down
+
+2018-03-20 16:23:09,745 EXIT TURTLE RECORDING
+
+
+// -------------------- WORKED -----------------------------
+2018-03-21 03:18:35,301 TURTLE CODE STARTED
+
+2018-03-21 03:18:35,312 Recording Time: 43200
+
+2018-03-21 03:18:35,313 INTERVAL 615_1335    
+
+2018-03-21 03:18:36,849 TIME: 2018_03_22_22:05:15
+
+2018-03-21 03:18:36,871 Child PID: 577
+
+2018-03-21 03:18:37,877 Listening for commands from controller
+
+//
+2018-03-21 03:18:37,584 CAMERA STARTED
+
+2018-03-21 03:18:37,586 TIME: 2018_03_22_22:05:15
+
+2018-03-21 03:18:37,587 Recording Time: 43200
+
+** RECORDED FOR 10 MINUTES **
+
+//
+2018-03-21 03:29:20,982 GOT: SLEEP
+
+2018-03-21 03:29:21,377 Sleep command recieved. Shutting down
+
+2018-03-21 03:29:21,565 EXIT TURTLE RECORDING
+
+
+// --------------------------------------------------------------
+2018-03-21 03:31:35,402 TURTLE CODE STARTED
+
+2018-03-21 03:31:35,408 Recording Time: 43200
+
+2018-03-21 03:31:35,409 INTERVAL 480_1200
+
+2018-03-21 03:31:36,936 TIME: SLEEP
+
+2018-03-21 03:31:36,949 Child PID: 600
+
+2018-03-21 03:31:37,956 Listening for commands from controller
+//
+2018-03-21 03:31:37,609 CAMERA STARTED
+
+2018-03-21 03:31:37,611 TIME: SLEEP
+
+2018-03-21 03:31:37,612 Recording Time: 43200
+
+
+//
+2018-03-21 03:31:37,961 GOT: SLEEP
+
+2018-03-21 03:31:37,967 Sleep command recieved. Shutting down
+
+2018-03-21 03:31:37,971 EXIT TURTLE RECORDING
+
+
+// --------------------- WORKED ------------------------------
+2018-03-21 03:33:33,135 TURTLE CODE STARTED
+
+2018-03-21 03:33:33,142 Recording Time: 43200
+
+2018-03-21 03:33:33,143 INTERVAL 480_1200 // 8:00 to 20:00
+
+2018-03-21 03:33:34,677 TIME: 2018_03_23_08:02:44
+
+2018-03-21 03:33:34,691 Child PID: 563
+
+2018-03-21 03:33:35,697 Listening for commands from controller
+
+//
+2018-03-21 03:33:35,201 CAMERA STARTED
+
+2018-03-21 03:33:35,202 TIME: 2018_03_23_08:02:44
+
+2018-03-21 03:33:35,203 Recording Time: 43200
+
+** RECORDED FOR 12 HOURS **
+
+//
+2018-03-21 15:31:49,806 GOT: SLEEP
+
+2018-03-21 15:31:49,814 Sleep command recieved. Shutting down
+
+2018-03-21 15:31:49,821 EXIT TURTLE RECORDING
+
+
+// --------------------------------------------------------------
+2018-03-21 17:18:35,008 TURTLE CODE STARTED
+
+2018-03-21 17:18:35,016 Recording Time: 43200
+
+2018-03-21 17:18:35,016 INTERVAL 480_1200
+
+2018-03-21 17:18:36,545 TIME: SLEEP
+
+2018-03-21 17:18:36,559 Child PID: 577
+
+2018-03-21 17:18:37,565 Listening for commands from controller
+
+//
+2018-03-21 17:18:37,284 CAMERA STARTED
+
+2018-03-21 17:18:37,286 TIME: SLEEP
+
+2018-03-21 17:18:37,286 Recording Time: 43200
+
+
+//
+2018-03-21 17:18:37,572 GOT: SLEEP
+
+2018-03-21 17:18:37,577 Sleep command recieved. Shutting down
+
+2018-03-21 17:18:37,582 EXIT TURTLE RECORDING
+
+
+// ---------------------- WORKED -----------------------------
+2018-03-21 17:20:33,187 TURTLE CODE STARTED
+
+2018-03-21 17:20:33,194 Recording Time: 43200
+
+2018-03-21 17:20:33,194 INTERVAL 480_1200
+
+2018-03-21 17:20:34,729 TIME: 2018_03_25_12:32:00
+
+2018-03-21 17:20:34,742 Child PID: 581
+
+2018-03-21 17:20:35,749 Listening for commands from controller
+
+//
+2018-03-21 17:20:35,465 CAMERA STARTED
+
+2018-03-21 17:20:35,467 TIME: 2018_03_25_12:32:00
+
+2018-03-21 17:20:35,468 Recording Time: 43200
+
+** RECORDED FOR 7.5 HOURS **
+
+//
+2018-03-22 00:49:34,262 GOT: SLEEP
+
+2018-03-22 00:49:34,270 Sleep command recieved. Shutting down
+
+2018-03-22 00:49:34,275 EXIT TURTLE RECORDING
+
+
+// ---------------------- HALF WORKED ------------------------------
+2018-03-22 00:51:31,050 TURTLE CODE STARTED
+
+2018-03-22 00:51:31,056 Recording Time: 43200
+
+2018-03-22 00:51:31,057 INTERVAL 480_1200
+
+2018-03-22 00:51:32,592 TIME: 2018_03_26_08:02:41
+
+2018-03-22 00:51:32,606 Child PID: 565
+
+2018-03-22 00:51:33,612 Listening for commands from controller
+
+//
+2018-03-22 00:51:33,332 CAMERA STARTED
+
+2018-03-22 00:51:33,334 TIME: 2018_03_26_08:02:41
+
+2018-03-22 00:51:33,334 Recording Time: 43200
+
+** RECORDED FOR 4 HOURS **
+
+//
+2018-03-22 04:53:43,886 GOT: SLEEP
+
+2018-03-22 04:53:43,893 Sleep command recieved. Shutting down
+
+2018-03-22 04:53:43,900 EXIT TURTLE RECORDING
