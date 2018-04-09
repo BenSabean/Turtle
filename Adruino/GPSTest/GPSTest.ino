@@ -58,8 +58,10 @@ void setup ()
   // GPIO setup
   pinMode(SWITCH, INPUT);
   pinMode(MOSFET, OUTPUT);
+  pinMode(8, OUTPUT);
   // MOSFET is off - PI is off
   digitalWrite(MOSFET, LOW);
+  digitalWrite(8, LOW);
 }
 
 
@@ -86,7 +88,7 @@ void loop ()
     timer = millis(); // reset the timer
     GPS_print();
     GPS_printLog();
-    GPS_dumpData();
+    //GPS_dumpData();
   }
 }
 
@@ -148,6 +150,7 @@ void GPS_print()
   Serial.print(" quality: "); Serial.println((int)GPS.fixquality);
   if (GPS.fix)
   {
+    digitalWrite(8, HIGH);
     Serial.print("Location: ");
     Serial.print(GPS.latitude, 4); Serial.print(GPS.lat);
     Serial.print(", ");
@@ -161,6 +164,7 @@ void GPS_print()
     Serial.print("Angle: "); Serial.println(GPS.angle);
     Serial.print("Altitude: "); Serial.println(GPS.altitude);
     Serial.print("Satellites: "); Serial.println((int)GPS.satellites);
+    delay(200);
   }
 }
 
