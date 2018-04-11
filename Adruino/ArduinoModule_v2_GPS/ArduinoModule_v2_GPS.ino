@@ -26,7 +26,9 @@
 // Command list
 #define INTERVAL_CMD   "INTERVAL"
 #define HANDSHAKE_CMD  "OK"
-#define GPS_CMD        "GPS"
+#define GPS_LOG_CMD    "GPS_LOG"
+#define GPS_DUMP_CMD   "GPS_DUMP"
+#define GPS_ERASE_CMD  "GPS_ERASE"
 #define TIME_CMD       "TIME"
 #define SLEEP_CMD      "SLEEP"
 #define DELIM          "_"
@@ -34,11 +36,11 @@
 // GPIO
 #define SWITCH    13
 #define PI_TX     4
-#define PI_RX     8
-#define MOSFET    6
-#define PI_CHECK  10
-#define GPS_RX    3
-#define GPS_TX    2
+#define PI_RX     3
+#define MOSFET    2
+#define PI_CHECK  6
+#define GPS_RX    10
+#define GPS_TX    11
 
 /* COM Setup */
 SoftwareSerial RPi(PI_RX, PI_TX);       // RX and TX for RPI COM
@@ -52,9 +54,6 @@ Adafruit_GPS GPS (&GPS_COM);
 // Default 8:00 to 18:00
 volatile int Start = 480, End = 1400, Now = 481;
 
-/* GPS Data Containers */
-volatile float Long = 0, Lat = 0;
-
 ///////////////////////////////////////////
 //                                       //
 //                SETUP                  //
@@ -67,13 +66,10 @@ void setup ()
   Serial.println("\nSTARTED");    // DEBUG
 
   // Start Serial COM with PI
-  RPi.begin(9600);
+  RPi.begin(19200); // Need to be faster than GPS
 
   // GPS initialization commands
   GPS_init();
-
-  // Uncomment to set Time for GPS
-  // setTime();
 
   /* GPIO setup */
   pinMode(SWITCH, INPUT);
@@ -88,8 +84,6 @@ void setup ()
 //                LOOP                   //
 //                                       //
 ///////////////////////////////////////////
-// Loop timer for non blocking operations
-uint32_t timer = millis();
 void loop ()
 {
   /* Variables */
@@ -97,15 +91,7 @@ void loop ()
   bool Awake = digitalRead(PI_CHECK);     // Get Pi status
   bool Switch = digitalRead(SWITCH);      // Get ]Switch status
 
-  //-------- Updating time and position -------
-  if (timer > millis())  timer = millis();
-  // every 1 second update time and GPS data
-  if (millis() - timer > 1 * 1000)
-  {
-    timer = millis(); // reset the timer
-    GPS_update();
-    Now = GPS.hour * 60 + GPS.minute;   // Convert to hours
-  }
+  RPi.listen(); // Listen for software serial 1 - Pi
 
   //-------- Check for messages from Pi -------
   if (RPi.available())
@@ -115,25 +101,31 @@ void loop ()
 
     Serial.print("GOT: "); Serial.println(message);
 
+    // Pi transmits mission interval
     if (strstr(message, INTERVAL_CMD) != NULL)
     {
       get_time_interval(message);   // Pi submits Time Interval
-      // DEBUG
-      //Serial.println("Start = " + String(Start) + " Now = " + String(Now) + " End = " + String(End));
-      // DEBUG
     }
+    // Pi requested current time
     else if (strcmp(message, TIME_CMD) == 0)
     {
       get_time_string(message);
       send_RPi(message);  // Pi requested Time String
     }
-    else if (strcmp(message, GPS_CMD) == 0)
+    // GPS start logging data command
+    else if (strcmp(message, GPS_LOG_CMD) == 0)
     {
-      // GPS Format: int[Time]_float[Long]_float[Lat] (ex:820_104.44421_41.23342)
-      dtostrf(Long, 10, 7, slong);
-      dtostrf(Lat, 10, 7, slat);
-      sprintf(message, "%d_%s_%s", Now, slong, slat);
-      send_RPi(message);
+      GPS_log();
+    }
+    // Pi requested dumping of GPS data
+    else if (strcmp(message, GPS_DUMP_CMD) == 0)
+    {
+      GPS_dump();
+    }
+    // Erasing stored GPS data
+    else if (strcmp(message, GPS_ERASE_CMD) == 0)
+    {
+      GPS.sendCommand(PMTK_LOCUS_ERASE_FLASH);
     }
   }
 
@@ -258,22 +250,6 @@ void get_time_string(char* buff)
 }
 
 /*
-   Set RTC time to system upload time
-*/
-void setTime()
-{
-  //if (rtc.lostPower())
-  //{
-  //  Serial.println("RTC lost power, lets set the time!");
-  // following line sets the RTC to the date & time this sketch was compiled
-  //rtc.adjust(DateTime(F(__DATE__), F(__TIME__)));
-  // This line sets the RTC with an explicit date & time, for example to set
-  // January 21, 2014 at 3am you would call:
-  // rtc.adjust(DateTime(2014, 1, 21, 3, 0, 0));
-  //}
-}
-
-/*
    Function to read incomming serial string
 */
 void readString (char* buff, int len)
@@ -291,13 +267,15 @@ void GPS_init()
   // Start Serial COM with GPS
   GPS.begin(9600);
   // uncomment this line to turn on RMC (recommended minimum) and GGA (fix data) including altitude
-  GPS.sendCommand(PMTK_SET_NMEA_OUTPUT_RMCGGA);
+  //GPS.sendCommand(PMTK_SET_NMEA_OUTPUT_RMCGGA);
   // uncomment this line to turn on only the "minimum recommended" data
   //GPS.sendCommand(PMTK_SET_NMEA_OUTPUT_RMCONLY);
+  // uncomment to keep gps quiet
+  GPS.sendCommand(PMTK_SET_NMEA_OUTPUT_OFF);
   // Set the update rate
   GPS.sendCommand(PMTK_SET_NMEA_UPDATE_1HZ);   // 1 Hz update rate
   // Request updates on antenna status, comment out to keep quiet
-  GPS.sendCommand(PGCMD_ANTENNA);
+  //GPS.sendCommand(PGCMD_ANTENNA);
   // Disable Interrups
   TIMSK0 &= ~_BV(OCIE0A);
   delay(1000);
@@ -306,26 +284,50 @@ void GPS_init()
 /*
    Update GPS Values
 */
-bool GPS_update()
+void GPS_update()
 {
-  char c = GPS.read();
+  GPS_COM.listen(); // Listen for softwareserial 2 - GPS
+  // Start receiving data
+  GPS.sendCommand(PMTK_SET_NMEA_OUTPUT_RMCONLY);
+  // Waiting for message to come through
+  delay(1000);
+  // Reading input
+  GPS.read();
   // New message from the GPS
   if (GPS.newNMEAreceived())
   {
     // DEBUG
     //Serial.println(GPS.lastNMEA());   // this also sets the newNMEAreceived() flag to false
     // Parsing
-    if (!GPS.parse(GPS.lastNMEA()))   // this also sets the newNMEAreceived() flag to false
-      return 1;  // we can fail to parse a sentence in which case we should just wait for another
-    else
-    {
-      // Updating position values
-
-      //
-      return 0;
-    }
-      
+    GPS.parse(GPS.lastNMEA());   // this also sets the newNMEAreceived() flag to false
   }
-  return 0;
+  // Disable updates
+  GPS.sendCommand(PMTK_SET_NMEA_OUTPUT_OFF);
+  RPi.listen(); // Listen for softwareserial 1 - Pi
 }
+
+/*
+  Starting GPS logging with number of retries
+*/
+void GPS_log()
+{
+  GPS_COM.listen(); // Listen for softwareserial 2 - GPS
+  for(int retry = 0; retry < 5; retry ++)
+  {
+    Serial.print("Starting logging....");
+    if (GPS.LOCUS_StartLogger()) break;
+    else  Serial.println(" no response :(");
+    delay(500);
+  }
+  RPi.listen(); // Listen for softwareserial 1 - Pi
+}
+
+void GPS_dump()
+{
+  GPS_COM.listen(); // Listen for softwareserial 2 - GPS
+  ;
+  RPi.listen(); // Listen for softwareserial 1 - Pi
+}
+
+
 
