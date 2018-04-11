@@ -20,7 +20,7 @@
 #define PI_BOOT_DELAY_S     1     // Delay for Pi to boot up In seconds
 #define PI_SHUTDOWN_DELAY_S 2     // Delay for Pi to shutdown In seconds
 
-#define SERIAL_RETRY        5     // Attemps to get serial value
+#define SERIAL_RETRY        1     // Attemps to get serial value
 #define SERIAL_TIMEOUT_S    2     // Waiting time for response from Pi
 
 // Command list
@@ -35,10 +35,10 @@
 
 // GPIO
 #define SWITCH    13
-#define PI_TX     4
-#define PI_RX     3
+#define PI_TX     3
+#define PI_RX     4
 #define MOSFET    2
-#define PI_CHECK  6
+#define PI_CHECK  7
 #define GPS_RX    10
 #define GPS_TX    11
 
@@ -84,12 +84,22 @@ void setup ()
 //                LOOP                   //
 //                                       //
 ///////////////////////////////////////////
+uint32_t g_start = millis();
 void loop ()
 {
   /* Variables */
   char message[50], slong[10], slat[10];  memset(message, NULL, sizeof(message));
   bool Awake = digitalRead(PI_CHECK);     // Get Pi status
   bool Switch = digitalRead(SWITCH);      // Get ]Switch status
+
+  if (g_start > millis()) g_start = millis();
+  if (millis() - g_start > 30 * 1000)
+  {
+    g_start = millis();
+    Serial.println("Updating GPS");
+    GPS_update();
+    Now = (GPS.hour - 3) * 60 + GPS.minute;
+  }
 
   RPi.listen(); // Listen for software serial 1 - Pi
 
@@ -104,23 +114,29 @@ void loop ()
     // Pi transmits mission interval
     if (strstr(message, INTERVAL_CMD) != NULL)
     {
+      Serial.println(" -- INTERVAL -- ");
       get_time_interval(message);   // Pi submits Time Interval
+      Serial.println("Start: " + String(Start) + " Now: " + String(Now) + " End: " + String(End));
     }
     // Pi requested current time
     else if (strcmp(message, TIME_CMD) == 0)
     {
+      Serial.println(" -- TIME -- ");
       get_time_string(message);
       send_RPi(message);  // Pi requested Time String
     }
     // GPS start logging data command
     else if (strcmp(message, GPS_LOG_CMD) == 0)
     {
+      Serial.println(" -- GPS LOG -- ");
       GPS_log();
     }
     // Pi requested dumping of GPS data
     else if (strcmp(message, GPS_DUMP_CMD) == 0)
     {
+      Serial.println(" -- GPS DUMP -- ");
       GPS_dump();
+      Serial.println(" -- DUMP FINISHED -- ");
     }
     // Erasing stored GPS data
     else if (strcmp(message, GPS_ERASE_CMD) == 0)
@@ -245,8 +261,32 @@ int send_RPi(char* _msg)
 */
 void get_time_string(char* buff)
 {
+  // Updating GPS time values
   GPS_update();
-  sprintf(buff, "%04d_%02d_%02d_%02d:%02d:%02d", GPS.year, GPS.month, GPS.day, GPS.hour, GPS.minute, GPS.seconds);
+
+  int hour = GPS.hour - 3;
+  int day = GPS.day;
+  int month = GPS.month;
+  int year = GPS.year;
+
+  // UTC to NovaScotia Time conversion
+  if (hour < 0)
+  {
+    hour += 24;
+    day--;
+  }
+  if (day < 0)
+  {
+    day += 29;
+    month--;
+  }
+  if (month < 0)
+  {
+    month += 12;
+    year--;
+  }
+
+  sprintf(buff, "%04d_%02d_%02d_%02d:%02d:%02d", 2000 + year, month, day, hour, GPS.minute, GPS.seconds);
 }
 
 /*
@@ -267,13 +307,13 @@ void GPS_init()
   // Start Serial COM with GPS
   GPS.begin(9600);
   // uncomment this line to turn on RMC (recommended minimum) and GGA (fix data) including altitude
-  //GPS.sendCommand(PMTK_SET_NMEA_OUTPUT_RMCGGA);
+  GPS.sendCommand(PMTK_SET_NMEA_OUTPUT_RMCGGA);
   // uncomment this line to turn on only the "minimum recommended" data
   //GPS.sendCommand(PMTK_SET_NMEA_OUTPUT_RMCONLY);
   // uncomment to keep gps quiet
-  GPS.sendCommand(PMTK_SET_NMEA_OUTPUT_OFF);
+  //GPS.sendCommand(PMTK_SET_NMEA_OUTPUT_OFF);
   // Set the update rate
-  GPS.sendCommand(PMTK_SET_NMEA_UPDATE_1HZ);   // 1 Hz update rate
+  GPS.sendCommand(PMTK_SET_NMEA_UPDATE_10HZ);   // 1 Hz update rate
   // Request updates on antenna status, comment out to keep quiet
   //GPS.sendCommand(PGCMD_ANTENNA);
   // Disable Interrups
@@ -282,27 +322,29 @@ void GPS_init()
 }
 
 /*
-   Update GPS Values
+   Update GPS Values for time, stored internally
 */
 void GPS_update()
 {
   GPS_COM.listen(); // Listen for softwareserial 2 - GPS
-  // Start receiving data
-  GPS.sendCommand(PMTK_SET_NMEA_OUTPUT_RMCONLY);
-  // Waiting for message to come through
-  delay(1000);
-  // Reading input
-  GPS.read();
-  // New message from the GPS
-  if (GPS.newNMEAreceived())
+
+  uint32_t start = millis();
+  while (millis() - start < 0.5 * 1000)
   {
-    // DEBUG
-    //Serial.println(GPS.lastNMEA());   // this also sets the newNMEAreceived() flag to false
-    // Parsing
-    GPS.parse(GPS.lastNMEA());   // this also sets the newNMEAreceived() flag to false
+    // if millis() or timer wraps around, we'll just reset it
+    if (start > millis())  start = millis();
+
+    // Reading input
+    GPS.read();
+    // New message from the GPS
+    if (GPS.newNMEAreceived())
+    {
+      // DEBUG
+      //Serial.println(GPS.lastNMEA());   // this also sets the newNMEAreceived() flag to false
+      // Parsing
+      GPS.parse(GPS.lastNMEA());   // this also sets the newNMEAreceived() flag to false
+    }
   }
-  // Disable updates
-  GPS.sendCommand(PMTK_SET_NMEA_OUTPUT_OFF);
   RPi.listen(); // Listen for softwareserial 1 - Pi
 }
 
@@ -312,9 +354,10 @@ void GPS_update()
 void GPS_log()
 {
   GPS_COM.listen(); // Listen for softwareserial 2 - GPS
-  for(int retry = 0; retry < 5; retry ++)
+  Serial.print("Starting logging");
+  for (int retry = 0; retry < 5; retry ++)
   {
-    Serial.print("Starting logging....");
+    Serial.print(".");
     if (GPS.LOCUS_StartLogger()) break;
     else  Serial.println(" no response :(");
     delay(500);
@@ -322,10 +365,39 @@ void GPS_log()
   RPi.listen(); // Listen for softwareserial 1 - Pi
 }
 
+/*
+   Dumps the contants of GPS Log file to serial port
+*/
 void GPS_dump()
 {
+  char buff[15];    // buffer to check for end of dump
+  char end[] = "$PGTOP,11,2*6E";
+  bool loop = true, match = false;
+  buff[14] = '\0';
+
   GPS_COM.listen(); // Listen for softwareserial 2 - GPS
-  ;
+
+  // Disable regular data transvers
+  GPS.sendCommand(PMTK_SET_NMEA_OUTPUT_OFF);
+  // Command to start dumping
+  GPS.sendCommand("$PMTK622,1*29");
+  while (loop)
+  {
+    if (GPS_COM.available())
+    {
+      buff[13] = GPS_COM.read();
+      RPi.print(buff[13]);
+      // Shift Left
+      for (int i = 0; i < 13; i++) buff[i] = buff[i + 1];
+      // Checking for exit
+      loop = false;
+      for (int i = 0; i < 13; i++)
+        if (buff[i] != end[i]) loop = true;
+    }
+  }
+  Serial.println(" ----- DUMP END ----- ");
+  // Enable regular data transfers
+  GPS.sendCommand(PMTK_SET_NMEA_OUTPUT_RMCGGA);
   RPi.listen(); // Listen for softwareserial 1 - Pi
 }
 
