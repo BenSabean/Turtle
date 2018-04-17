@@ -20,7 +20,6 @@ def write(msg):
     for i in range(0,RETRY):
         print("Sending: " + msg)
         port.write(msg)
-	resp = ""
         resp = port.readline()[:-2]
         if(not (resp == "")):
             return resp
@@ -70,7 +69,7 @@ except Exception as e:
 # Set communication parameters
 port = serial.Serial(
     port = "/dev/ttyS0",
-    baudrate=9600,
+    baudrate=74880,
     timeout=2,
     parity = serial.PARITY_NONE,
     bytesize = serial.EIGHTBITS,
@@ -96,7 +95,7 @@ print( write(INTERVAL + '_' + str(sTime) + '_' + str(eTime)) )
 sleep(1)
 # Get current time from Arduino
 message = write(TIME)
-sleep(0.5)
+sleep(1)
 port.write(ACK)
 print("TIME: " + message)
 logging.info("TIME: " + message)
@@ -120,20 +119,20 @@ while poll == None:
         print("GOT: " + message)
         logging.info("GOT: " + str(message))
     if(message == SLEEP):
-        print('GOT SLEEP')
+        print("Shutting down")
         port.write(ACK)
         proc.terminate()
+        sleep(2)
+	print('GOT SLEEP DONE RECORDING')
         logging.info("Sleep command recieved. Shutting down")
-        break
+        #os.system("sudo shutdown -h now")
+        #os.system("python /home/pi/Turtle/RPI/off.py")
+        sys.exit()
 
 # Tell Arduino that RPI is ready to turn off
 #os.system("sudo shutdown -h now")
-print('UNMOUNTING USB')
+port.write("DONE")
 logging.info('EXIT TURTLE RECORDING')
-sleep(20)
-os.system("sudo umount /dev/sda1")
-print('DONE EXECUTION')
-os.system("sudo shutdown -t now")
 
 
 

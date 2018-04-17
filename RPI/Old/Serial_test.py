@@ -1,6 +1,6 @@
 import os
 from time import sleep
-import serial
+import serial                   
 # run: sudo apt-get install python-serial
 # disable serial login shell
 
@@ -8,20 +8,17 @@ import serial
 port = serial.Serial(
     port = "/dev/ttyS0",
     baudrate=9600,
-    timeout=2,
+    timeout=5,
     parity = serial.PARITY_NONE,
     bytesize = serial.EIGHTBITS,
-    stopbits = serial.STOPBITS_ONE,
-    inter_byte_timeout = None
-    #parser = serialport.parsers.readline("")
+    stopbits = serial.STOPBITS_ONE
 )
 
 message = "none"
 
 while(1):
-    message = "This is a very long string abcdefghijklmnopqrstuvwxyz"
+    message = "TIME"
     port.write(message)
-    print(message)
     message = port.readline()
     if (message != ""):
         print(message[:-2])

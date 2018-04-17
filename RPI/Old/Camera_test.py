@@ -11,7 +11,7 @@ import datetime as dt
     omxplayer myvideo.mp4
 '''
 
-recording_time = 992600 #60*60*12  # recording time in seconds
+recording_time = 30 #60*60*12  # recording time in seconds
 
 # Setting parameters
 camera = picamera.PiCamera()
@@ -21,7 +21,7 @@ try:
     camera.framerate = 25
     camera.rotation = 180
     # Start recording
-    camera.start_preview()
+    # camera.start_preview()
     camera.annotate_background = picamera.Color('black')
     camera.annotate_text = dt.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
     # Specifing output file
@@ -32,7 +32,7 @@ try:
         camera.wait_recording(0.2)
     # Finish recording
     camera.stop_recording()
-    camera.stop_preview()
+    # camera.stop_preview()
 except Exception as e:
     f = open("/home/pi/Turtle/RPI/error.log", "w")
     f.write(str(e))
