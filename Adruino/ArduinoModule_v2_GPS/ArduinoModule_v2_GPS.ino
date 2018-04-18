@@ -245,7 +245,7 @@ int send_RPi(char* _msg)
 
 /*
   Returns a Date-Time String
-  Format: YYYY_MM_DD_hh_mm
+  Format: YYYY_MM_DD hh:mm:ss
 */
 void get_time_string(char* buff)
 {
@@ -270,7 +270,7 @@ void get_time_string(char* buff)
     month += 12;
     year--;
   }
-  sprintf(buff, "%04d_%02d_%02d_%02d:%02d:%02d", 2000 + year, month, day, hour, GPS.minute, GPS.seconds);
+  sprintf(buff, "%04d_%02d_%02d %02d:%02d:%02d", 2000 + year, month, day, hour, GPS.minute, GPS.seconds);
 }
 
 /*
@@ -369,6 +369,7 @@ void GPS_dump()
         if (buff[i] != end[i]) loop = true;
     }
   }
+  Serial.println(HANDSHAKE_CMD);
   // Enable regular data transfers
   GPS.sendCommand(PMTK_SET_NMEA_OUTPUT_RMCGGA);
   GPS.sendCommand(PMTK_SET_NMEA_UPDATE_1HZ);   // 1 Hz update rate
