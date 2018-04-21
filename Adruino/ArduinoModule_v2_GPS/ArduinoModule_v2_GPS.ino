@@ -23,18 +23,21 @@
 #define PI_BOOT_DELAY_S     1     // Delay for Pi to boot up In seconds
 #define PI_SHUTDOWN_DELAY_S 2     // Delay for Pi to shutdown In seconds
 
+/*
 #define RPi_RETRY        1     // Attemps to get RPi value
 #define RPi_TIMEOUT_S    2     // Waiting time for response from Pi
+*/
 
 // Command list
-#define INTERVAL_CMD   "INTERVAL"
-#define HANDSHAKE_CMD  "OK"
-#define GPS_LOG_CMD    "GPS_LOG"
-#define GPS_DUMP_CMD   "GPS_DUMP"
-#define GPS_ERASE_CMD  "GPS_ERASE"
-#define TIME_CMD       "TIME"
-#define SLEEP_CMD      "SLEEP"
-#define DELIM          "_"
+#define INTERVAL   "INTERVAL"
+#define HANDSHAKE  "OK"
+#define GPS_LOG    "GPS_LOG"
+#define GPS_DUMP   "GPS_DUMP"
+#define GPS_ERASE  "GPS_ERASE"
+#define TIME       "TIME"
+#define SLEEP      "SLEEP"
+#define DURATION   "DURATION"
+#define DELIM      "_"
 
 // GPIO
 #define SWITCH    13
@@ -57,7 +60,7 @@ volatile int Start = 480, End = 1140, Now = 481;
 // Mission duration in minutes
 // Default: 2 days = 48 h = 2880 minutes
 // Timer used to keep track of changes in mission duration
-volatile int Duration = 2880, prevNow = 0, Timer = 0;
+volatile int Duration = 2880, prevNow = 0, Timer = -2; // Timer changes two time in beginning
 
 
 ///////////////////////////////////////////
@@ -86,9 +89,6 @@ void setup ()
 
   // GPS initialization commands
   GPS_init();
-
-  // Flush any Serial data from GPS
-  GPS_COM.readString();
 }
 
 ///////////////////////////////////////////
@@ -102,19 +102,11 @@ void loop ()
   char message[50], slong[10], slat[10];  memset(message, NULL, sizeof(message));
   bool Awake = digitalRead(PI_CHECK);     // Get Pi status
   bool Switch = digitalRead(SWITCH);      // Get ]Switch status
-  int hour = 0;                // Timer counts mission time in minutes
 
   //
   //  Checking messages from GPS
   //
   GPS_update();
-
-  //
-  //  Updating current time
-  //
-  hour = GPS.hour - 3;    // UTC to Atlantic conversion
-  if (hour < 0) hour += 24;
-  Now = hour * 60 + GPS.minute;
 
   //
   // Keeping track of mission time every minute
@@ -142,7 +134,7 @@ void loop ()
     //
     // Pi transmits mission interval
     //
-    if (strstr(message, INTERVAL_CMD) != NULL)
+    if (strstr(message, INTERVAL) != NULL)
     {
       get_time_interval(message); // Pi submits Time Interval
       Serial.println("Start: " + String(Start) + " Now: " + String(Now) + " End: " + String(End));
@@ -151,40 +143,49 @@ void loop ()
     //
     // Pi requested current time
     //
-    else if (strcmp(message, TIME_CMD) == 0)
+    else if (strcmp(message, TIME) == 0)
     {
       get_time_string(message);
-      send_RPi(message);  // Pi requested Time String
+      Serial.println(message);  // Pi requested Time String
     }
 
     //
     // GPS start logging data command
     //
-    else if (strcmp(message, GPS_LOG_CMD) == 0)
+    else if (strcmp(message, GPS_LOG) == 0)
     {
       Serial.println("\n -- GPS LOG -- ");
       GPS_log();
-      Serial.println(HANDSHAKE_CMD);
+      Serial.println(HANDSHAKE);
     }
 
     //
     // Pi requested dumping of GPS data
     //
-    else if (strcmp(message, GPS_DUMP_CMD) == 0)
+    else if (strcmp(message, GPS_DUMP) == 0)
     {
       Serial.println("\n -- GPS DUMP -- ");
       GPS_dump();
-      Serial.println(HANDSHAKE_CMD);
+      Serial.println(HANDSHAKE);
     }
 
     //
     // Erasing stored GPS data
     //
-    else if (strcmp(message, GPS_ERASE_CMD) == 0)
+    else if (strcmp(message, GPS_ERASE) == 0)
     {
       GPS.sendCommand(PMTK_LOCUS_ERASE_FLASH);
-      Serial.println(HANDSHAKE_CMD);
+      Serial.println(HANDSHAKE);
     }
+
+    //
+    // Checking Mission Duration
+    //
+    else if (strcmp(message, DURATION) == 0)
+    {
+      Serial.println(Timer);
+    }
+
   }
 
   //
@@ -200,8 +201,8 @@ void loop ()
       // SLEEP //
       if (Now > End || Now < Start)
       {
-        send_RPi(SLEEP_CMD);
-        delay(2 * 1000);
+        // Tell Pi to Sleep
+        Serial.println(SLEEP);
       }
       // AWAKE //
       else
@@ -223,7 +224,7 @@ void loop ()
       else
       {
         // Turn Pi Power OFF
-        delay(PI_SHUTDOWN_DELAY_S * 1000);
+        //delay(PI_SHUTDOWN_DELAY_S * 1000);
         digitalWrite(MOSFET, HIGH);
 
       }
@@ -238,13 +239,12 @@ void loop ()
     if (Awake)
     {
       // Tell Pi to Sleep
-      send_RPi(SLEEP_CMD);
-      delay(2 * 1000);
+      Serial.println(SLEEP);
     }
     //  Pi is OFF //
     else
     {
-      delay(PI_SHUTDOWN_DELAY_S * 1000);
+      //delay(PI_SHUTDOWN_DELAY_S * 1000);
       digitalWrite(MOSFET, HIGH);
     }
   }
@@ -273,7 +273,7 @@ int get_time_interval(char* message)
   // Error checking
   if (_start > 0 && _start < 1439 && _end > 0 && _end < 1439)
   {
-    Serial.println(HANDSHAKE_CMD); // Letting Pi know we got data
+    Serial.println(HANDSHAKE); // Letting Pi know we got data
     Start = _start;
     End = _end;
     return 0; // break out of the loop
@@ -286,8 +286,9 @@ int get_time_interval(char* message)
   0 - HandShake success
   1 - HandShake failed
 */
-int send_RPi(char* _msg)
-{
+/*
+  int send_RPi(char* _msg)
+  {
   unsigned long whenToStop;
   char message[10];
   memset(message, '\0', sizeof(message));
@@ -303,12 +304,13 @@ int send_RPi(char* _msg)
       if (Serial.available() > 0)
       {
         readString(message, 10);
-        if (strcmp(message, HANDSHAKE_CMD) == 0) done = true;
+        if (strcmp(message, HANDSHAKE) == 0) done = true;
       }
     }
   }
   return 1;
-}
+  }
+*/
 
 /*
   Returns a Date-Time String
@@ -337,7 +339,7 @@ void get_time_string(char* buff)
     month += 12;
     year--;
   }
-  sprintf(buff, "20%02d-%02d-%02d %02d:%02d:%02d", year, month, day, hour, GPS.minute, GPS.seconds);
+  sprintf(buff, "%04d-%02d-%02d %02d:%02d:%02d", 2000 + year, month, day, hour, GPS.minute, GPS.seconds);
 }
 
 /*
@@ -364,7 +366,7 @@ void GPS_init()
   // uncomment to keep gps quiet
   //GPS.sendCommand(PMTK_SET_NMEA_OUTPUT_OFF);
   // Set the update rate
-  GPS.sendCommand(PMTK_SET_NMEA_UPDATE_1HZ);   // 1 Hz update rate
+  GPS.sendCommand(PMTK_SET_NMEA_UPDATE_10HZ);   // 1 Hz update rate
   // Request updates on antenna status, comment out to keep quiet
   //GPS.sendCommand(PGCMD_ANTENNA);
   // Disable Interrups
@@ -377,12 +379,20 @@ void GPS_init()
 */
 void GPS_update()
 {
+  int hour = 0;
+
   // Reading input
   GPS.read();
   // New message from the GPS
   // this also sets the newNMEAreceived() flag to false
-  if (GPS.newNMEAreceived()) GPS.parse(GPS.lastNMEA());
+  if (GPS.newNMEAreceived())
+    GPS.parse(GPS.lastNMEA());
 
+  // Updating current time
+  // UTC to Atlantic conversion
+  hour = GPS.hour - 3;
+  if (hour < 0) hour += 24;
+  Now = hour * 60 + GPS.minute;
 }
 
 /*
@@ -436,8 +446,8 @@ void GPS_dump()
         if (buff[i] != end[i]) loop = true;
     }
   }
-  Serial.println(HANDSHAKE_CMD);
+  Serial.println(HANDSHAKE);
   // Enable regular data transfers
   GPS.sendCommand(PMTK_SET_NMEA_OUTPUT_RMCGGA);
-  GPS.sendCommand(PMTK_SET_NMEA_UPDATE_1HZ);   // 1 Hz update rate
+  GPS.sendCommand(PMTK_SET_NMEA_UPDATE_10HZ);   // 1 Hz update rate
 }
