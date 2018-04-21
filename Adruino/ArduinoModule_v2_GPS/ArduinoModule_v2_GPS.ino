@@ -6,6 +6,9 @@
    Program for Arduino Nano controller
    Control recording and shutdown cycles
    Reads GPS date-time and location
+
+   Contact: Arthur Bondar
+   Email:   arthur.bondar.1@gmail.com
 */
 
 #include <SoftwareSerial.h>
@@ -36,9 +39,10 @@
 // GPIO
 #define SWITCH    13
 #define MOSFET    2
-#define PI_CHECK  7
+#define PI_CHECK  4
 #define GPS_RX    10
 #define GPS_TX    11
+#define VALVE     9
 
 /* COM Setup */
 SoftwareSerial GPS_COM(GPS_RX, GPS_TX); // RX and TX for GPS COM
@@ -49,29 +53,42 @@ Adafruit_GPS GPS (&GPS_COM);
 /* Time interval */
 // In Minutes (H*60 + M)
 // Default 8:00 to 18:00
-volatile int Start = 480, End = 1400, Now = 481;
+volatile int Start = 480, End = 1140, Now = 481;
+// Mission duration in minutes
+// Default: 2 days = 48 h = 2880 minutes
+// Timer used to keep track of changes in mission duration
+volatile int Duration = 2880, prevNow = 0, Timer = 0;
+
 
 ///////////////////////////////////////////
 //                                       //
 //                SETUP                  //
 //                                       //
 ///////////////////////////////////////////
+
 void setup ()
 {
   // Start RPi COM with PI
-  Serial.begin(19200); // Need to be faster than GPS
+  Serial.begin(19200); // Need to be faster than GPS (9600)
   Serial.println("\nSTARTED");    // DEBUG
-
-  // GPS initialization commands
-  GPS_init();
 
   /* GPIO setup */
   pinMode(SWITCH, INPUT);
   pinMode(PI_CHECK, INPUT);
   pinMode(MOSFET, OUTPUT);
-  pinMode(7, INPUT);
+  pinMode(PI_CHECK, INPUT);
+  pinMode(7, INPUT);  // On first prototype TX and D7 shorted
 
-  digitalWrite(MOSFET, HIGH);
+  // Turn on Pi
+  digitalWrite(MOSFET, LOW);
+  // Keep Valve Closed
+  digitalWrite(VALVE, LOW);
+
+  // GPS initialization commands
+  GPS_init();
+
+  // Flush any Serial data from GPS
+  GPS_COM.readString();
 }
 
 ///////////////////////////////////////////
@@ -85,49 +102,84 @@ void loop ()
   char message[50], slong[10], slat[10];  memset(message, NULL, sizeof(message));
   bool Awake = digitalRead(PI_CHECK);     // Get Pi status
   bool Switch = digitalRead(SWITCH);      // Get ]Switch status
-  int hour = 0;
+  int hour = 0;                // Timer counts mission time in minutes
 
-  // Checking for messages from GPS
+  //
+  //  Checking messages from GPS
+  //
   GPS_update();
 
-  // Updating current time
-  hour = GPS.hour - 3;
+  //
+  //  Updating current time
+  //
+  hour = GPS.hour - 3;    // UTC to Atlantic conversion
   if (hour < 0) hour += 24;
   Now = hour * 60 + GPS.minute;
 
-  //-------- Check for messages from Pi -------
+  //
+  // Keeping track of mission time every minute
+  //
+  if (prevNow != Now)
+  {
+    Timer ++;
+    prevNow = Now;
+  }
+
+  //
+  //  Checking for Mission end and Triggering Valve
+  //
+  if (Timer > Duration)
+    digitalWrite(VALVE, HIGH);
+
+  //
+  //  -------- Check for messages from Pi -------
+  //
   if (Serial.available())
   {
     // Reading new message
     readString(message, sizeof(message));
 
+    //
     // Pi transmits mission interval
+    //
     if (strstr(message, INTERVAL_CMD) != NULL)
     {
       get_time_interval(message); // Pi submits Time Interval
       Serial.println("Start: " + String(Start) + " Now: " + String(Now) + " End: " + String(End));
     }
+
+    //
     // Pi requested current time
+    //
     else if (strcmp(message, TIME_CMD) == 0)
     {
       get_time_string(message);
       send_RPi(message);  // Pi requested Time String
     }
+
+    //
     // GPS start logging data command
+    //
     else if (strcmp(message, GPS_LOG_CMD) == 0)
     {
       Serial.println("\n -- GPS LOG -- ");
       GPS_log();
       Serial.println(HANDSHAKE_CMD);
     }
+
+    //
     // Pi requested dumping of GPS data
+    //
     else if (strcmp(message, GPS_DUMP_CMD) == 0)
     {
       Serial.println("\n -- GPS DUMP -- ");
       GPS_dump();
       Serial.println(HANDSHAKE_CMD);
     }
+
+    //
     // Erasing stored GPS data
+    //
     else if (strcmp(message, GPS_ERASE_CMD) == 0)
     {
       GPS.sendCommand(PMTK_LOCUS_ERASE_FLASH);
@@ -135,31 +187,40 @@ void loop ()
     }
   }
 
-  //-------------- Mission Timing --------------
-  if (Switch)   // 1. SWITCH ON //
+  //
+  //  -------------- Mission Timing --------------
+  //
+  //  SWITCH ON
+  //
+  if (Switch)
   {
-    if (Awake)      // 2. Pi is ON //
+    //  Pi is ON //
+    if (Awake)
     {
-      // 3. Time to Sleep //
+      // SLEEP //
       if (Now > End || Now < Start)
-      { // SLEEP YES //
+      {
         send_RPi(SLEEP_CMD);
         delay(2 * 1000);
       }
-      else // 3. Time to be Awake //
+      // AWAKE //
+      else
       {
-        digitalWrite(MOSFET, LOW); // Turn Pi Power ON
+        // Turn Pi Power ON
+        digitalWrite(MOSFET, LOW);
       }
     }
-    else            // 2. Pi is OFF //
+    //  Pi is OFF //
+    else
     {
-      // 3. Time to WakeUp //
+      // AWAKE //
       if (Now > Start && Now < End)
       {
         // Turn Pi Power ON
         digitalWrite(MOSFET, LOW);
       }
-      else  // 3. Time to Sleep //
+      // SLEEP //
+      else
       {
         // Turn Pi Power OFF
         delay(PI_SHUTDOWN_DELAY_S * 1000);
@@ -167,16 +228,21 @@ void loop ()
 
       }
     }
-  }// -----------------------
-  else  // 1. SWITCH OFF //
+  }
+  //
+  //  SWITCH OFF
+  //
+  else
   {
-    if (Awake)     // 2. Pi is ON //
-    { // Tell Pi to Sleep
-      // DEBUG
+    //  Pi is ON //
+    if (Awake)
+    {
+      // Tell Pi to Sleep
       send_RPi(SLEEP_CMD);
       delay(2 * 1000);
     }
-    else            // 2. Pi is OFF //
+    //  Pi is OFF //
+    else
     {
       delay(PI_SHUTDOWN_DELAY_S * 1000);
       digitalWrite(MOSFET, HIGH);
@@ -184,6 +250,7 @@ void loop ()
   }
   //--------------------------------------------
 }
+
 
 ///////////////////////////////////////////
 //                                       //
@@ -245,7 +312,7 @@ int send_RPi(char* _msg)
 
 /*
   Returns a Date-Time String
-  Format: YYYY_MM_DD hh:mm:ss
+  Format: YYYY-MM-DD hh:mm:ss
 */
 void get_time_string(char* buff)
 {
@@ -254,7 +321,7 @@ void get_time_string(char* buff)
   int month = GPS.month;
   int year = GPS.year;
 
-  // UTC to NovaScotia Time conversion
+  // UTC to Atlantic Time conversion
   if (hour < 0)
   {
     hour += 24;
@@ -270,7 +337,7 @@ void get_time_string(char* buff)
     month += 12;
     year--;
   }
-  sprintf(buff, "%04d_%02d_%02d %02d:%02d:%02d", 2000 + year, month, day, hour, GPS.minute, GPS.seconds);
+  sprintf(buff, "20%02d-%02d-%02d %02d:%02d:%02d", year, month, day, hour, GPS.minute, GPS.seconds);
 }
 
 /*
@@ -374,6 +441,3 @@ void GPS_dump()
   GPS.sendCommand(PMTK_SET_NMEA_OUTPUT_RMCGGA);
   GPS.sendCommand(PMTK_SET_NMEA_UPDATE_1HZ);   // 1 Hz update rate
 }
-
-
-

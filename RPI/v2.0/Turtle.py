@@ -147,8 +147,9 @@ logging.info("Child PID: " + str(camera.pid))
 sleep(1)
 
 #
-#   Main program Loop
+#   Get GPS data and start new log
 #
+
 
 
 
