@@ -15,21 +15,23 @@ def toByteArray(str):
         
     return bytes
 
+# Convert array of 2 bytes to int 
 def parseInt(bytes):
     if len(bytes) != 2:
         print >> sys.stderr, "WARNING: expecting 2 bytes got %s" % bytes
     number = ((0xFF & bytes[1]) << 8) | (0xFF & bytes[0])
     return number
 
+# Convert array of 4 bytes to double
 def parseLong(bytes):
     if len(bytes) != 4:
         print >> sys.stderr, "WARNING: expecting 4 bytes got %s" % bytes
     number = ((0xFF & bytes[3]) << 24) | ((0xFF & bytes[2]) << 16) | ((0xFF & bytes[1]) << 8) | (0xFF & bytes[0])    
     return number
 
+# Long to Float conversion
 def parseFloat(bytes):
     longValue = parseLong(bytes)
-
     # borrowed code from https://github.com/douggilliland/Dougs-Arduino-Stuff/blob/master/Host%20code/parseLOCUS/parseLOCUS.cpp
     exponent = ((longValue >> 23) & 0xff) # float
     exponent -= 127.0
@@ -43,7 +45,9 @@ def parseFloat(bytes):
 
 def parseLine(line):
     """Returns an array of Coordinates"""
+    # Each line starts with the same string
     if line.startswith("$PMTKLOX,1"):
+        # format: data FFFFFF,FFFFFFF, ... *6E check sum at the end
         data, actual_checksum = line.split("*")
 
         generated_checksum = checksum(data)
@@ -53,6 +57,7 @@ def parseLine(line):
             # TODO stop processing?
             print >> sys.stderr, "WARNING: Checksum failed. Expected %s but calculated %s for %s" % (actual_checksum, generated_checksum, line)
 
+        # Getting each part of the message separated by , 
         parts = data.split(",")
         
         # remove the first 3 parts - command, type, line_number

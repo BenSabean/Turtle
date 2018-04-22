@@ -137,7 +137,7 @@ void loop ()
     if (strstr(message, INTERVAL) != NULL)
     {
       get_time_interval(message); // Pi submits Time Interval
-      Serial.println("Start: " + String(Start) + " Now: " + String(Now) + " End: " + String(End));
+      //Serial.println("Start: " + String(Start) + " Now: " + String(Now) + " End: " + String(End));
     }
 
     //
@@ -154,7 +154,6 @@ void loop ()
     //
     else if (strcmp(message, GPS_LOG) == 0)
     {
-      Serial.println("\n -- GPS LOG -- ");
       GPS_log();
       Serial.println(HANDSHAKE);
     }
@@ -164,7 +163,6 @@ void loop ()
     //
     else if (strcmp(message, GPS_DUMP) == 0)
     {
-      Serial.println("\n -- GPS DUMP -- ");
       GPS_dump();
       Serial.println(HANDSHAKE);
     }
@@ -429,7 +427,7 @@ void GPS_dump()
   GPS.sendCommand("$PMTK622,1*29");
 
   uint32_t start = millis();
-  while (loop && (millis() - start) < 25 * 1000)
+  while (loop && (millis() - start) < 90 * 1000)
   {
     // Millis overflow
     if (start > millis()) start = millis();
@@ -446,7 +444,7 @@ void GPS_dump()
         if (buff[i] != end[i]) loop = true;
     }
   }
-  Serial.println(HANDSHAKE);
+  Serial.println();
   // Enable regular data transfers
   GPS.sendCommand(PMTK_SET_NMEA_OUTPUT_RMCGGA);
   GPS.sendCommand(PMTK_SET_NMEA_UPDATE_10HZ);   // 1 Hz update rate
