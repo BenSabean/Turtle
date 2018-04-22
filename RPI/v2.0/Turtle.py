@@ -33,10 +33,10 @@ import datetime         # lib for system datetime
 ###########################################
 
 # Mission
-DURATION = 28800  #8 hours
-START = "8:00"
-FINISH = "16:00"
-RETRY = 2
+DURATION = 50400 # 8 hours
+START = "5:00"
+FINISH = "19:00"
+RETRY = 4
 # Serial
 TIME = "TIME"
 ACK = "OK"
@@ -50,18 +50,19 @@ SD_WAIT_S = 80
 SD_UMOUNT_S = 20
 # File Path
 CAMERA_PATH = "/home/pi/Turtle/RPI/Camera.py"
-TEMP_PATH = "/home/pi/Turtle/RPI/gps_raw.txt"
-CSV_PATH = "/home/pi/Turtle/RPI/"
+TEMP_PATH = "/home/pi/Turtle/RPI/USB/gps_raw.txt"
+CSV_PATH = "/home/pi/Turtle/RPI/USB/"
+HEADERS_PRINTED = False
 USB_PATH = "/home/pi/Turtle/RPI/USB"
 LOG_PATH = "/home/pi/Turtle/RPI/USB/turtle.log"
 # Need to be changes to .mission.json
-MISSION_PATH = "/home/pi/Turtle/RPI/USB/Mission.txt"
+MISSION_PATH = "/home/pi/Turtle/RPI/USB/mission.txt"
 
 # Set communication parameters
 port = serial.Serial(
     port = "/dev/ttyS0",
     baudrate=19200,
-    timeout=2,          # Wait time for data in sec
+    timeout=3,          # Wait time for data in sec
     parity = serial.PARITY_NONE,
     bytesize = serial.EIGHTBITS,
     stopbits = serial.STOPBITS_ONE
@@ -101,60 +102,72 @@ def write(msg):
     Re-writes into CSV format with time stamp
 '''
 def getGPS():
-    # Opening file for GPS storage
-    #f_raw = open(TEMP_PATH, "w")
+    global HEADERS_PRINTED
+    # wrties twice to the same file 1. at start 2. after sleep
     f_csv = open(CSV_PATH + datetime.datetime.now().strftime('%Y-%m-%d') + '.csv', "a")
-    '''
+    # Opening file for GPS storage
+    f_raw = open(TEMP_PATH, "w")
+
+    #
+    #   Getting raw GPS data
+    #
     # Array of characters to hold GPS bytes
     buff = []
     buff.append('X')
     buff.append('X')
     logging.info("GPS-DUMP STARTED")
     print("GPS-DUMP STARTED")
-    print("Buffer = " + str(buff))
     # Flushing serial buffer
     port.readline()
     # Send Start Dump log command
     port.write(GPS_DUMP)
-    # Loop to receive GPS data using rotating buffer
+    # Breaks from loop after 3 minutes
+    start = datetime.datetime.now()
+    # Loop to receive GPS data using shift register
     while not ((buff[0] == 'O') and (buff[1] == 'K')):
         # Rotating buffer
         buff[0] = buff[1]
         # Receiving new character
         buff[1] = port.read()
-        # Saving
         #if not (buff[1] == ""):
 	#	print("%c" % buff[1])
+        # Saving
         f_raw.write(buff[1])
+	if (datetime.datetime.now() - start).seconds > (3*60):
+		logging.info("GPS-DUMP TIMEOUT OCCURED")
+		print("GPS-DUMP TIMEOUT OCCURED")
+		break
 
     # Closing temprary raw data file
     f_raw.close()
-    '''
 
-    print("PARSING")
+    #
+    #   Parsing
+    #
+    print("PARSING TO CSV")
     # Parse data as JSOM
     coords = locus.parseFile(TEMP_PATH)
     # filter out bad data
     coords = [c for c in coords if c.fix > 0 and c.fix < 5]
     # Printing into CSV file
     # Headers
-    f_csv.write("Time stamp,Sattelite Fix,Latitude,Longitute,Altitude\n")
+    if not (HEADERS_PRINTED == True):
+        f_csv.write("Timestamp,Satellite Fix,Latitude,Longitude,Altitude\n")
+        HEADERS_PRINTED = True
     # Lines
     for c in coords:
         line = str(c.datetime) +","+ str(c.fix) +","+ str(c.latitude) +","+ str(c.longitude) +","+ str(c.height) +"\n"
         f_csv.write(line)
-        print(line)
+        # print(line)
 
-     # Closing files
+    # Closing files
     logging.info("GPS-DUMP FINISHED")
     print("GPS-DUMP FINISHED")
     f_csv.close()
-    '''
     # Starting new Log
     write(GPS_ERASE)
     sleep(1)
     write(GPS_LOG)
-    '''
 
 
 ###########################################
@@ -168,7 +181,6 @@ def getGPS():
 #
 GPIO.output(16, GPIO.HIGH)
 
-'''
 #
 #   USB initialization
 #
@@ -182,7 +194,6 @@ os.system("sudo rm " + USB_PATH + "/*")
 os.system("sudo mount /dev/sda1 " + USB_PATH)
 logging.basicConfig(filename= LOG_PATH, format="%(asctime)s %(message)s", level=logging.DEBUG)
 logging.info("TURTLE CODE STARTED")
-'''
 print("TURTLE CODE STARTED")
 
 #
@@ -205,7 +216,7 @@ hour,minute = FINISH.split(":")
 eTime = int(hour)*60 + int(minute)
 # Get Video Duration
 DURATION = (eTime - sTime) * 60
-logging.info('INTERVAL ' + str(sTime) + '_' + str(eTime))
+logging.info('INTERVAL_' + str(sTime) + '_' + str(eTime))
 logging.info("Recording Time: " + str(DURATION))
 print("Recording Time: ", DURATION)
 
@@ -230,14 +241,12 @@ os.system("sudo date -s '" + time + "'")
 #
 #   Spawn Camera.py as child process
 #
-'''
 camera = subprocess.Popen(['python', CAMERA_PATH, str(DURATION)],
                         stdout = subprocess.PIPE,
                         stderr = subprocess.STDOUT)
 print("Child PID: ",camera.pid)
 logging.info("Child PID: " + str(camera.pid))
 sleep(1)
-'''
 
 #
 #   Get GPS data and start new log
@@ -269,7 +278,8 @@ while poll == None:
         port.write(ACK)
         # Stop camera recording
         camera.terminate()
-        sleep(1)
+        # Starting second GPS log
+	getGPS()
         logging.info("Sleep command recieved. Shutting down")
         break
 
@@ -278,7 +288,7 @@ while poll == None:
 #
 # END LOOP
 
-'''
+
 #
 #   Shutdown Routine
 #
@@ -289,5 +299,5 @@ logging.info('EXIT TURTLE RECORDING')
 sleep(SD_UMOUNT_S)
 os.system("sudo umount /dev/sda1")
 print('DONE EXECUTION')
-os.system("sudo shutdown -t now")
-'''
+# os.system("sudo shutdown -t now")
+

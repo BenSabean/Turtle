@@ -1,5 +1,5 @@
 # LOCUS log parser
-# (c) 2013 Don Coleman 
+# (c) 2013 Don Coleman
 
 import sys
 from pprint import pformat
@@ -11,8 +11,8 @@ def toByteArray(str):
     while len(str) > 1:
         byte = str[:2]
         bytes.append(int(byte, 16))
-        str = str[2::] 
-        
+        str = str[2::]
+
     return bytes
 
 def parseInt(bytes):
@@ -24,7 +24,7 @@ def parseInt(bytes):
 def parseLong(bytes):
     if len(bytes) != 4:
         print >> sys.stderr, "WARNING: expecting 4 bytes got %s" % bytes
-    number = ((0xFF & bytes[3]) << 24) | ((0xFF & bytes[2]) << 16) | ((0xFF & bytes[1]) << 8) | (0xFF & bytes[0])    
+    number = ((0xFF & bytes[3]) << 24) | ((0xFF & bytes[2]) << 16) | ((0xFF & bytes[1]) << 8) | (0xFF & bytes[0])
     return number
 
 def parseFloat(bytes):
@@ -39,7 +39,7 @@ def parseFloat(bytes):
     floatValue = mantissa * exponent
     if ((longValue & 0x80000000) == 0x80000000):
         floatValue = -floatValue
-    return floatValue 
+    return floatValue
 
 def parseLine(line):
     """Returns an array of Coordinates"""
@@ -54,7 +54,7 @@ def parseLine(line):
             print >> sys.stderr, "WARNING: Checksum failed. Expected %s but calculated %s for %s" % (actual_checksum, generated_checksum, line)
 
         parts = data.split(",")
-        
+
         # remove the first 3 parts - command, type, line_number
         # following this 8 byte hex strings (max 24)
         dataFields = parts[3:]
@@ -82,10 +82,10 @@ def checksum(line):
     for char in line[1:]:
         check = check ^ ord(char)
 
-    # convert to hex string, remove 0x, 0 pad 
+    # convert to hex string, remove 0x, 0 pad
     return hex(check)[2:].upper().zfill(2)
 
-# See "LOCUS logging content.pdf" 
+# See "LOCUS logging content.pdf"
 # http://learn.adafruit.com/adafruit-ultimate-gps/downloads-and-resources
 #
 # Basic Record - 16 bytes
@@ -97,9 +97,10 @@ def checksum(line):
 def parseBasicRecord(bytes):
 
     timestamp = parseLong(bytes[0:4])
-    # if timestamp > 4290000000: # skip bad values
-    #     continue    
-        
+    if timestamp > 4290000000: # skip bad values
+        timestamp = 1
+
+    # Value Out of Range error, long is different with ARM architecture
     date = datetime.fromtimestamp(timestamp)
     fix = bytes[4] # TODO bit flag     unsigned char u1VALID = 0x00;  // 0:NoFix , 1: Fix, 2: DGPS, 6: Estimated
     latitude = parseFloat(bytes[5:9])
@@ -119,7 +120,7 @@ def parseFile(filename):
             coords += (results)
 
     return coords
- 
+
 # TODO Is Coordinates the right name? Or would it be better to have a
 # Position object that contains a TimeStamp and Coordinates?
 # Or just replace this class with a dictionary?
@@ -145,9 +146,9 @@ class Coordinates:
         height: %i
         """ % (self.datetime, self.fix, self.latitude, self.longitude, self.height)
 
-    def __eq__(self, other): 
+    def __eq__(self, other):
         return self.__dict__ == other.__dict__
-		
+
 if __name__ == "__main__":
     from pprint import pprint
     coords = parseFile("sample.log")

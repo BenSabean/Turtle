@@ -7,7 +7,7 @@ import locus
 import json
 import datetime
 
-coords = locus.parseFile('sample.log')
+coords = locus.parseFile('gps_raw.txt') # sample.log
 
 # filter out bad data
 coords = [c for c in coords if c.fix > 0 and c.fix < 5] 

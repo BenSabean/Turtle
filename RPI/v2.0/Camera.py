@@ -33,7 +33,8 @@ logging.basicConfig(filename=LOG_PATH, format='%(asctime)s %(message)s', level=l
 logging.info("CAMERA STARTED")
 
 # Checking command line arguments
-if(len(sys.argv) != 1):
+if(len(sys.argv) != 2):
+    logging.info("WRONG ARGUMENT NUMBER ARG = " + argv[1])
     print("WRONG ARGUMENT NUMBER")
     sys.exit(0)
 

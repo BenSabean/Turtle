@@ -20,14 +20,6 @@
 //                                       //
 ///////////////////////////////////////////
 
-#define PI_BOOT_DELAY_S     1     // Delay for Pi to boot up In seconds
-#define PI_SHUTDOWN_DELAY_S 2     // Delay for Pi to shutdown In seconds
-
-/*
-#define RPi_RETRY        1     // Attemps to get RPi value
-#define RPi_TIMEOUT_S    2     // Waiting time for response from Pi
-*/
-
 // Command list
 #define INTERVAL   "INTERVAL"
 #define HANDSHAKE  "OK"
@@ -78,9 +70,9 @@ void setup ()
   /* GPIO setup */
   pinMode(SWITCH, INPUT);
   pinMode(PI_CHECK, INPUT);
-  pinMode(MOSFET, OUTPUT);
-  pinMode(PI_CHECK, INPUT);
   pinMode(7, INPUT);  // On first prototype TX and D7 shorted
+  pinMode(MOSFET, OUTPUT);
+  pinMode(VALVE, OUTPUT);
 
   // Turn on Pi
   digitalWrite(MOSFET, LOW);
@@ -154,8 +146,8 @@ void loop ()
     //
     else if (strcmp(message, GPS_LOG) == 0)
     {
-      GPS_log();
-      Serial.println(HANDSHAKE);
+      if (GPS_log() == 0)
+        Serial.println(HANDSHAKE);
     }
 
     //
@@ -222,9 +214,7 @@ void loop ()
       else
       {
         // Turn Pi Power OFF
-        //delay(PI_SHUTDOWN_DELAY_S * 1000);
         digitalWrite(MOSFET, HIGH);
-
       }
     }
   }
@@ -242,7 +232,6 @@ void loop ()
     //  Pi is OFF //
     else
     {
-      //delay(PI_SHUTDOWN_DELAY_S * 1000);
       digitalWrite(MOSFET, HIGH);
     }
   }
@@ -262,53 +251,35 @@ void loop ()
 */
 int get_time_interval(char* message)
 {
-  int _start, _end;
+  int _start = -1, _end = 9999;
+  char *p;
 
-  strtok(message, "_");
-  sscanf(strtok(NULL, "_"), "%d", &_start);
-  sscanf(strtok(NULL, "_"), "%d", &_end);
+  // Extracting INTERVAL
+  p = strtok(message, "_");
+  if (p != NULL)
+  {
+    // Extracting first time
+    p = strtok(NULL, "_");
+    sscanf(p, "%d", &_start);
+  }
+  if (p != NULL)
+  {
+    // Extracting second time
+    p = strtok(NULL, "_");
+    sscanf(p, "%d", &_end);
+  }
 
   // Error checking
   if (_start > 0 && _start < 1439 && _end > 0 && _end < 1439)
   {
     Serial.println(HANDSHAKE); // Letting Pi know we got data
+    // Setting globals
     Start = _start;
     End = _end;
     return 0; // break out of the loop
   }
   return 1;
 }
-
-/*
-  Send command to Pi + HandShake
-  0 - HandShake success
-  1 - HandShake failed
-*/
-/*
-  int send_RPi(char* _msg)
-  {
-  unsigned long whenToStop;
-  char message[10];
-  memset(message, '\0', sizeof(message));
-  bool done = false;
-
-  for (uint8_t i = 0; (i < RPi_RETRY) && (done == false); i++)
-  {
-    Serial.println(_msg);    // Send Data command
-    // Waiting for handshake
-    whenToStop = millis () + (RPi_TIMEOUT_S * 1000);
-    while ( (millis() < whenToStop) && (done == false) )
-    {
-      if (Serial.available() > 0)
-      {
-        readString(message, 10);
-        if (strcmp(message, HANDSHAKE) == 0) done = true;
-      }
-    }
-  }
-  return 1;
-  }
-*/
 
 /*
   Returns a Date-Time String
@@ -398,14 +369,11 @@ void GPS_update()
 */
 int GPS_log()
 {
-  Serial.print("Starting logging");
-  for (int retry = 5; retry > 0; retry --)
+  for (int retry = 10; retry > 0; retry --)
   {
-    Serial.print(".");
     if (GPS.LOCUS_StartLogger()) return 0;
     delay(200);
   }
-  Serial.println("\nno response :(");
   return 1;
 }
 
@@ -414,9 +382,9 @@ int GPS_log()
 */
 void GPS_dump()
 {
-  char buff[19];    // buffer to check for end of dump
-  char end[] = "$PMTK001,622,3*36";
-  bool loop = true, match = false;
+  char buff[19];                    // Shift buffer to check for end of dump
+  char end[] = "$PMTK001,622,3*36"; // Dump finished command
+  bool keep_loop = true;
   memset(buff, '\0', sizeof(buff));
 
   // Disable regular data transvers
@@ -426,22 +394,26 @@ void GPS_dump()
   // Command to start dumping
   GPS.sendCommand("$PMTK622,1*29");
 
+  // Safe loop to dump GPS data - will exit after 3 minutes regardless
   uint32_t start = millis();
-  while (loop && (millis() - start) < 90 * 1000)
+  while (keep_loop && (millis() - start) < 180 * 1000)
   {
-    // Millis overflow
+    // If millis timer overflow happens
     if (start > millis()) start = millis();
 
     if (GPS_COM.available())
     {
+      // Reading new caracter from GPS
       buff[17] = GPS_COM.read();
+      // Sending to RPI
       Serial.print(buff[17]);
-      // Shift Left
+      // Shifting shift register Left
       for (int i = 0; i < 17; i++) buff[i] = buff[i + 1];
-      // Checking for exit
-      loop = false;
+      // Comparing each char in shifting reg. with output string
+      // When one character is not equal, keeps looping 
+      keep_loop = false;
       for (int i = 0; i < 17; i++)
-        if (buff[i] != end[i]) loop = true;
+        if (buff[i] != end[i]) keep_loop = true;
     }
   }
   Serial.println();
