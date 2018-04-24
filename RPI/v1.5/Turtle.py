@@ -1,9 +1,9 @@
 '''
-Date:    Apr 17, 2018
+Date:    Apr 23, 2018
 
 This is the cetral program that reads timing interval
 Starts a camera program while maintaining serial connection
-Parses and logs GPS data at the end of each recording day
+GPS avaible using the commands and will record position during the day
 
 To use serial:
 # run: sudo apt-get install python-serial
@@ -22,8 +22,6 @@ import json             # JSON for GPS parsing
 import sys              # os.system call
 import RPi.GPIO as GPIO # Pi GPIO access
 import logging          # lib for error logging
-import locus            # lib for GPS data parsing
-import json             # JSON format library
 import datetime         # lib for system datetime
 
 ###########################################
@@ -42,9 +40,7 @@ TIME = "TIME"
 ACK = "OK"
 INTERVAL = "INTERVAL"
 SLEEP = "SLEEP"
-GPS_LOG = "GPS_LOG"
-GPS_DUMP = "GPS_DUMP"
-GPS_ERASE = "GPS_ERASE"
+GPS = "GPS"
 # Delays
 SD_MOUNT_S = 30
 SD_UMOUNT_S = 20

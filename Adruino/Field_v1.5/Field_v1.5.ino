@@ -1,7 +1,7 @@
 /*
    DcPi Arduino Module
-   Apr 8, 2018
-   version: 2
+   Apr 23, 2018
+   version: 1.5 field test
 
    Program for Arduino Nano controller
    Control recording and shutdown cycles
@@ -23,14 +23,12 @@
 // Command list
 #define INTERVAL   "INTERVAL"
 #define HANDSHAKE  "OK"
-#define GPS_LOG    "GPS_LOG"
-#define GPS_DUMP   "GPS_DUMP"
-#define GPS_ERASE  "GPS_ERASE"
-#define START_DUMP "START_DUMP"
+#define GET_GPS    "GPS"
 #define TIME       "TIME"
 #define SLEEP      "SLEEP"
 #define DURATION   "DURATION"
 #define DELIM      "_"
+#define PARAM      "PARAM"
 
 // GPIO
 #define SWITCH    13
@@ -51,11 +49,9 @@ Adafruit_GPS GPS (&GPS_COM);
 // Default 5:00 to 19:00
 volatile int Start = 300, End = 1140, Now = 301;
 // Mission duration in minutes
-// Default: 2 days = 48 h = 2880 minutes
+// Default: 3 days = 72 h = 4320 minutes
 // Timer used to keep track of changes in mission duration
-volatile int Duration = 2880, prevNow = 0, Timer = -2; // Timer changes two time in beginning
-// Variable to start second dump
-volatile bool Do_once = false;
+volatile int Duration = 4320, prevNow = 0, Timer = -2; // Timer changes two time in beginning
 
 
 ///////////////////////////////////////////
@@ -79,7 +75,7 @@ void setup ()
   // Turn on Pi
   digitalWrite(MOSFET, LOW);
   // Keep Valve Closed
-  digitalWrite(VALVE, LOW);
+  digitalWrite(VALVE, HIGH);
 
   // GPS initialization commands
   GPS_init();
@@ -95,7 +91,8 @@ void setup ()
 void loop ()
 {
   /* Variables */
-  char message[50], slong[10], slat[10];  memset(message, NULL, sizeof(message));
+  char message[100];
+  memset(message, NULL, sizeof(message));
   bool Awake = digitalRead(PI_CHECK);     // Get Pi status
   bool Switch = digitalRead(SWITCH);      // Get Switch status
 
@@ -114,24 +111,10 @@ void loop ()
   }
 
   //
-  //  Starting second GPS log
-  //
-  // 5 minutes before end of awake cycle sends command
-  // to start second camera log retrival
-  if ( (End - Now) < 6 && Do_once == false)
-  {
-    Serial.println(START_DUMP);
-    Do_once = true;
-  }
-  // Reset flag to send start log command only once
-  if (Now > End || Now < Start)
-    Do_once = false;
-
-  //
   //  Checking for Mission End & Triggering Release Valve
   //
   if (Timer > Duration)
-    digitalWrite(VALVE, HIGH);
+    digitalWrite(VALVE, LOW);
 
   //
   //  -------- Check for messages from Pi -------
@@ -144,11 +127,10 @@ void loop ()
     //
     // Pi transmits mission interval
     //
+    // Format: INTERVAL_[Start]_[End]_[Duration] in minutes
     if (strstr(message, INTERVAL) != NULL)
     {
-      scan_time_interval(message); // Pi submits Time Interval
-      // HANDSHAKE inside the function
-      //Serial.println("Start: " + String(Start) + " Now: " + String(Now) + " End: " + String(End) + "DURATION: " + String(DURATION));
+      scan_time_interval(message); // HANDSHAKE inside the function
     }
 
     //
@@ -157,43 +139,25 @@ void loop ()
     else if (strcmp(message, TIME) == 0)
     {
       get_time_string(message);
-      Serial.println(message);  // Pi requested Time String
+      Serial.println(message);  // send Pi time string
     }
 
     //
-    // GPS start logging data command
+    // Pi requested GPS
     //
-    else if (strcmp(message, GPS_LOG) == 0)
+    else if (strcmp(message, GET_GPS) == 0)
     {
-      if (GPS_log() == 0)
-        Serial.println(HANDSHAKE);
+      get_GPS(message);
+      Serial.println(message);  // Send Pi gps string
     }
 
     //
-    // Pi requested dumping of GPS data
+    // Checking Mission Parameters
     //
-    else if (strcmp(message, GPS_DUMP) == 0)
+    else if (strcmp(message, PARAM) == 0)
     {
-      Serial.println(HANDSHAKE);
-      GPS_dump();
-      Serial.println(HANDSHAKE);
-    }
-
-    //
-    // Erasing stored GPS data
-    //
-    else if (strcmp(message, GPS_ERASE) == 0)
-    {
-      GPS.sendCommand(PMTK_LOCUS_ERASE_FLASH);
-      Serial.println(HANDSHAKE);
-    }
-
-    //
-    // Checking Mission Duration
-    //
-    else if (strcmp(message, DURATION) == 0)
-    {
-      Serial.println(Timer);
+      Serial.println("Start: " + String(Start) + " Now: " + String(Now) + " End: " + String(End));
+      Serial.println("Duration: " + String(Timer) + " of " + String(Duration));
     }
 
   } // -------------- END SERIAL --------------
@@ -267,35 +231,41 @@ void loop ()
 
 /*
   Sends command and receives start-end times
-  Format: INTERVAL_[FIRST]_[SECOND] in minutes (ex: 480_1439)
+  Format: INTERVAL_[START]_[END]_[DURATION] in minutes
+  Example: INTERVAL_480_1439_2880
 */
 int scan_time_interval(char* message)
 {
-  int _start = -1, _end = 9999;
+  int _start = -1, _end = 9999, _dur = 20000;
   char *p;
 
   // Extracting INTERVAL
   p = strtok(message, "_");
-  if (p != NULL)
-  {
-    // Extracting first time
-    p = strtok(NULL, "_");
-    sscanf(p, "%d", &_start);
-  }
-  if (p != NULL)
-  {
-    // Extracting second time
-    p = strtok(NULL, "_");
-    sscanf(p, "%d", &_end);
-  }
+  if (p == NULL) return 0;
+
+  // Extracting START time
+  p = strtok(NULL, "_");
+  if (p == NULL) return 0;
+  sscanf(p, "%d", &_start);
+
+  // Extracting END time
+  p = strtok(NULL, "_");
+  if (p == NULL) return 0;
+  sscanf(p, "%d", &_end);
+
+  // Extracting DURATION
+  p = strtok(NULL, "_");
+  if (p == NULL) return 0;
+  sscanf(p, "%d", &_dur);
 
   // Error checking
-  if (_start > 0 && _start < 1439 && _end > 0 && _end < 1439)
+  if (_start > 0 && _start < 1439 && _end > 0 && _end < 1439 && _dur > 0 && _dur < 15000)
   {
     Serial.println(HANDSHAKE); // Letting Pi know we got data
     // Setting globals
     Start = _start;
     End = _end;
+    Duration = _dur;
     return 0; // break out of the loop
   }
   return 1;
@@ -355,7 +325,7 @@ void GPS_init()
   // uncomment to keep gps quiet
   //GPS.sendCommand(PMTK_SET_NMEA_OUTPUT_OFF);
   // Set the update rate
-  GPS.sendCommand(PMTK_SET_NMEA_UPDATE_10HZ);   // 1 Hz update rate
+  GPS.sendCommand(PMTK_SET_NMEA_UPDATE_1HZ);   // 1 Hz update rate
   // Request updates on antenna status, comment out to keep quiet
   //GPS.sendCommand(PGCMD_ANTENNA);
   // Disable Interrups
@@ -385,59 +355,11 @@ void GPS_update()
 }
 
 /*
-  Starting GPS logging with number of retries
+   Sends GPS value to Pi
+   Format: Fix_Quality_Long_Lat_Speed_Angle
 */
-int GPS_log()
+void get_GPS(char* buff)
 {
-  for (int retry = 10; retry > 0; retry --)
-  {
-    if (GPS.LOCUS_StartLogger()) return 0;
-    delay(100);
-  }
-  return 1;
+  sprintf(buff, "%d_%d_%f_%f_%f_%f", GPS.fix, GPS.fixquality, GPS.latitudeDegrees, GPS.longitudeDegrees, GPS.speed);
 }
 
-/*
-   Dumps the contants of GPS Log file to RPi port
-*/
-void GPS_dump()
-{
-  char buff[19];                    // Shift buffer to check for end of dump
-  char end[] = "$PMTK001,622,3*36"; // Dump finished command
-  bool keep_loop = true;
-  memset(buff, '\0', sizeof(buff));
-
-  // Disable regular data transvers
-  GPS.sendCommand(PMTK_SET_NMEA_OUTPUT_OFF);
-  // Flush buffer
-  GPS_COM.readString();
-  // Command to start dumping
-  GPS.sendCommand("$PMTK622,1*29");
-
-  // Safe loop to dump GPS data - will exit after 3 minutes regardless
-  uint32_t start = millis();
-  while (keep_loop && (millis() - start) < 180 * 1000)
-  {
-    // If millis timer overflow happens
-    if (start > millis()) start = millis();
-
-    if (GPS_COM.available())
-    {
-      // Reading new caracter from GPS
-      buff[17] = GPS_COM.read();
-      // Sending to RPI
-      Serial.print(buff[17]);
-      // Shifting shift register Left
-      for (int i = 0; i < 17; i++) buff[i] = buff[i + 1];
-      // Comparing each char in shifting reg. with output string
-      // When one character is not equal, keeps looping
-      keep_loop = false;
-      for (int i = 0; i < 17; i++)
-        if (buff[i] != end[i]) keep_loop = true;
-    }
-  }
-  Serial.println();
-  // Enable regular data transfers
-  GPS.sendCommand(PMTK_SET_NMEA_OUTPUT_RMCGGA);
-  GPS.sendCommand(PMTK_SET_NMEA_UPDATE_10HZ);   // 1 Hz update rate
-}
