@@ -39,6 +39,7 @@
 #define GPS_RX    10
 #define GPS_TX    11
 #define VALVE     9
+#define BATTERY   A0
 
 /* COM Setup */
 SoftwareSerial GPS_COM(GPS_RX, GPS_TX); // RX and TX for GPS COM
@@ -72,9 +73,10 @@ void setup ()
   /* GPIO setup */
   pinMode(SWITCH, INPUT);
   pinMode(PI_CHECK, INPUT);
-  pinMode(7, INPUT);  // On first prototype TX and D7 shorted
+  pinMode(7, INPUT);       // On first prototype TX and D7 shorted
   pinMode(MOSFET, OUTPUT);
   pinMode(VALVE, OUTPUT);
+  pinMode(BATTERY, INPUT);
 
   // Turn on Pi
   digitalWrite(MOSFET, LOW);
@@ -98,6 +100,7 @@ void loop ()
   char message[50], slong[10], slat[10];  memset(message, NULL, sizeof(message));
   bool Awake = digitalRead(PI_CHECK);     // Get Pi status
   bool Switch = digitalRead(SWITCH);      // Get Switch status
+  float battery = ((float) analogRead(BATTERY)* 5.0)/1024.0;
 
   //
   //  Checking messages from GPS & Updating Time

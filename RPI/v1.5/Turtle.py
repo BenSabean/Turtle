@@ -8,6 +8,7 @@ GPS avaible using the commands and will record position during the day
 To use serial:
 # run: sudo apt-get install python-serial
 # disable serial login shell in raspi-config
+# ? Change usb interface in config ?
 
 contact: Arthur Bondar
 email:   arthur.bondar.1@gmail.com
@@ -31,7 +32,8 @@ import datetime         # lib for system datetime
 ###########################################
 
 # Mission
-DURATION = 50400 # 8 hours
+DURATION = 3*60*60  # Mission duration default 3 days - 4320 minutes
+REC_TIME = 10*60*60 # Camera timings default 10 hours per day - 36000
 START = "5:00"
 FINISH = "19:00"
 RETRY = 5
@@ -41,6 +43,7 @@ ACK = "OK"
 INTERVAL = "INTERVAL"
 SLEEP = "SLEEP"
 GPS = "GPS"
+PARAM = "PARAM"
 # Delays
 SD_MOUNT_S = 30
 SD_UMOUNT_S = 20
@@ -50,8 +53,6 @@ CAMERA_PATH = "/home/pi/Turtle/RPI/Camera.py"
 # Need to be changes to .mission.json
 MISSION_FILE = USB_PATH + "mission.txt"
 LOG_FILE = USB_PATH + "turtle.log"
-TEMP_FILE = USB_PATH + "gps_raw.txt"
-HEADERS_PRINTED = False
 
 # Set communication parameters
 port = serial.Serial(
@@ -68,7 +69,6 @@ GPIO.setmode(GPIO.BCM)
 GPIO.setwarnings(False)
 GPIO.setup(16, GPIO.OUT)
 
-
 ###########################################
 ##                                       ##
 ##              FUNCTIONS                ##
@@ -78,7 +78,7 @@ GPIO.setup(16, GPIO.OUT)
 '''
     Sends message in a loop over serial port
     If response not equal OK, resends again
-    Return: True - got OK, False didnot get OK
+    Return: response or 'None'
 '''
 def write(msg):
     for i in range(0,RETRY):
@@ -91,88 +91,11 @@ def write(msg):
         # Getting response
         resp = port.readline()[:-2]
         # Returning response
-        if resp == "OK":
-            return True
+        if not (resp == ""):
+            return resp
     # no response after all retries
     logging.debug("WARNING: Serial not responding")
-    return False
-
-
-'''
-    Gets GPS raw data over serial and writes in a file
-    Parses into JSON format using locus library
-    Re-writes into CSV format with time stamp
-'''
-def getGPS():
-    # Variable to indicate when file headers been printed
-    global HEADERS_PRINTED
-    # CSV file named using the current date
-    CSV_FILE = USB_PATH + datetime.datetime.now().strftime('%Y-%m-%d') + '.csv'
-    # wrties twice to the same file 1. at start 2. after sleep
-    f_csv = open(CSV_FILE, "a")
-    # Opening file for GPS storage
-    f_raw = open(TEMP_FILE, "w")
-
-    #
-    #   Getting raw GPS data
-    #
-    # Array of characters to hold GPS bytes, two bytes at a time
-    buff = []
-    buff.append('X')
-    buff.append('X')
-    logging.info("GPS-DUMP STARTED")
-    print("GPS-DUMP STARTED")
-    # Send Start Dump log command
-    write(GPS_DUMP)
-    # Breaks from loop after 3 minutes
-    start = datetime.datetime.now()
-    # Loop to receive GPS data using shift register
-    # When OK signal received, loop exits
-    while not ((buff[0] == 'O') and (buff[1] == 'K')):
-        # Shifting buffer
-        buff[0] = buff[1]
-        # Receiving new character
-        buff[1] = port.read()
-        #if not (buff[1] == ""):
-	    #print("%c" % buff[1])
-        # Saving
-        f_raw.write(buff[1])
-        # After 3 minutes, loop exits automatically
-        if (datetime.datetime.now() - start).seconds > (3*60):
-            logging.info("GPS-DUMP TIMEOUT OCCURED")
-            print("GPS-DUMP TIMEOUT OCCURED")
-            break
-
-    # Closing temprary raw data file
-    f_raw.close()
-
-    #
-    #   Parsing
-    #
-    print("PARSING TO CSV")
-    # Parse data as JSOM
-    coords = locus.parseFile(MISSION_FILE)
-    # filter out bad data
-    coords = [c for c in coords if c.fix > 0 and c.fix < 5]
-    # Printing into CSV file
-    # Headers
-    if not (HEADERS_PRINTED == True):
-        f_csv.write("Timestamp,Satellite Fix,Latitude,Longitude\n")
-        HEADERS_PRINTED = True
-    # Lines
-    for c in coords:
-        line = str(c.datetime) +","+ str(c.fix) +","+ str(c.latitude) +","+ str(c.longitude) +"\n"
-        f_csv.write(line)
-        # print(line)
-
-    # Closing CSV file
-    f_csv.close()
-    logging.info("GPS-DUMP FINISHED")
-    print("GPS-DUMP FINISHED")
-
-    # Starting new Log
-    write(GPS_ERASE)
-    write(GPS_LOG)
+    return "None"
 
 
 ###########################################
@@ -191,6 +114,7 @@ GPIO.output(16, GPIO.HIGH)
 #
 
 # Unmonting USB and removing files
+sleep(10)
 os.system("sudo umount /dev/sda1")
 sleep(SD_UMOUNT_S)
 os.system("sudo rm " + USB_PATH + "*")
@@ -211,6 +135,7 @@ try:
         mission = json.load(json_data_file)
     START = str(mission["start"])
     FINISH = str(mission["end"])
+    DURATION = str(mission["duration"])
 except Exception as e:
     logging.debug(str(e))
 

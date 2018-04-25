@@ -7,6 +7,9 @@
    Control recording and shutdown cycles
    Reads GPS date-time and location
 
+   Protocol: Pi sends commands
+   reponse either data or string "OK"
+
    Contact: Arthur Bondar
    Email:   arthur.bondar.1@gmail.com
 */
@@ -37,6 +40,7 @@
 #define GPS_RX    10
 #define GPS_TX    11
 #define VALVE     9
+#define BATTERY   A0
 
 /* COM Setup */
 SoftwareSerial GPS_COM(GPS_RX, GPS_TX); // RX and TX for GPS COM
@@ -52,6 +56,8 @@ volatile int Start = 300, End = 1140, Now = 301;
 // Default: 3 days = 72 h = 4320 minutes
 // Timer used to keep track of changes in mission duration
 volatile int Duration = 4320, prevNow = 0, Timer = -2; // Timer changes two time in beginning
+// Battery monitoring
+volatile float Battery = 0;
 
 
 ///////////////////////////////////////////
@@ -71,6 +77,7 @@ void setup ()
   pinMode(7, INPUT);  // On first prototype TX and D7 shorted
   pinMode(MOSFET, OUTPUT);
   pinMode(VALVE, OUTPUT);
+  pinMode(BATTERY, INPUT);
 
   // Turn on Pi
   digitalWrite(MOSFET, LOW);
@@ -90,11 +97,11 @@ void setup ()
 ///////////////////////////////////////////
 void loop ()
 {
-  /* Variables */
   char message[100];
   memset(message, NULL, sizeof(message));
   bool Awake = digitalRead(PI_CHECK);     // Get Pi status
   bool Switch = digitalRead(SWITCH);      // Get Switch status
+  Battery = ((float) analogRead(BATTERY) * 5.0) / 1024.0; // Battery life tracking
 
   //
   //  Checking messages from GPS & Updating Time
@@ -127,7 +134,6 @@ void loop ()
     //
     // Pi transmits mission interval
     //
-    // Format: INTERVAL_[Start]_[End]_[Duration] in minutes
     if (strstr(message, INTERVAL) != NULL)
     {
       scan_time_interval(message); // HANDSHAKE inside the function
@@ -152,12 +158,13 @@ void loop ()
     }
 
     //
-    // Checking Mission Parameters
+    // Pi requested system status
     //
     else if (strcmp(message, PARAM) == 0)
     {
-      Serial.println("Start: " + String(Start) + " Now: " + String(Now) + " End: " + String(End));
-      Serial.println("Duration: " + String(Timer) + " of " + String(Duration));
+      get_Paramters(message);
+      Serial.println(message);
+
     }
 
   } // -------------- END SERIAL --------------
@@ -172,34 +179,26 @@ void loop ()
     //  Pi is ON //
     if (Awake)
     {
-      // SLEEP //
+      // SLEEP TIME //
       if (Now > End || Now < Start)
-      {
         // Tell Pi to Sleep
         Serial.println(SLEEP);
-      }
-      // AWAKE //
+      // AWAKE TIME //
       else
-      {
         // Turn Pi Power ON
         digitalWrite(MOSFET, LOW);
-      }
     }
     //  Pi is OFF //
     else
     {
-      // AWAKE //
+      // AWAKE TIME //
       if (Now > Start && Now < End)
-      {
         // Turn Pi Power ON
         digitalWrite(MOSFET, LOW);
-      }
-      // SLEEP //
+      // SLEEP TIME //
       else
-      {
         // Turn Pi Power OFF
         digitalWrite(MOSFET, HIGH);
-      }
     }
   }
   //
@@ -209,15 +208,11 @@ void loop ()
   {
     //  Pi is ON //
     if (Awake)
-    {
       // Tell Pi to Sleep
       Serial.println(SLEEP);
-    }
     //  Pi is OFF //
     else
-    {
       digitalWrite(MOSFET, HIGH);
-    }
   }
   //--------------------------------------------
 }
@@ -326,8 +321,6 @@ void GPS_init()
   //GPS.sendCommand(PMTK_SET_NMEA_OUTPUT_OFF);
   // Set the update rate
   GPS.sendCommand(PMTK_SET_NMEA_UPDATE_1HZ);   // 1 Hz update rate
-  // Request updates on antenna status, comment out to keep quiet
-  //GPS.sendCommand(PGCMD_ANTENNA);
   // Disable Interrups
   TIMSK0 &= ~_BV(OCIE0A);
   delay(1000);
@@ -356,10 +349,28 @@ void GPS_update()
 
 /*
    Sends GPS value to Pi
-   Format: Fix_Quality_Long_Lat_Speed_Angle
+   Format: [Fix]_[Quality]_[Long]_[Lat]_[Speed]_[Angle]
 */
 void get_GPS(char* buff)
 {
-  sprintf(buff, "%d_%d_%f_%f_%f_%f", GPS.fix, GPS.fixquality, GPS.latitudeDegrees, GPS.longitudeDegrees, GPS.speed);
+  char lat[11], lon[11], speed[11], angle[11];
+
+  dtostrf(GPS.latitudeDegrees, 8, 6, lat);
+  dtostrf(GPS.longitudeDegrees, 8, 6, lon);
+  dtostrf(GPS.speed, 8, 6, speed);
+  dtostrf(GPS.angle, 8, 6, angle);
+
+  sprintf(buff, "%d_%d_%s_%s_%s_%s", GPS.fix, GPS.fixquality, lat, lon, speed, angle);
 }
 
+/*
+   Checking mission parameters to make sure evething on track
+   Format: [START]_[NOW]_[END]_[TIMER]_[DURATION]_[BATTERY]
+*/
+void get_Paramters(char* buff)
+{
+  char batt[10];
+  dtostrf(Battery, 7, 6, batt);
+
+  sprintf(buff, "%d_%d_%d_%d_%d_%s", Start, Now, End, Timer, Duration, batt);
+}
