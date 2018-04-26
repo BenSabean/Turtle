@@ -32,8 +32,10 @@ import datetime         # lib for system datetime
 ###########################################
 
 # Mission
-DURATION = 3*60*60  # Mission duration default 3 days - 4320 minutes
+DURATION = 3*60*60  # Mission duration default 3 days - 10800 minutes
 REC_TIME = 10*60*60 # Camera timings default 10 hours per day - 36000
+GPS_INTERVAL = 2*60 # Interval to get gps data in seconds 120
+PARAM_INTERVAL = 5*60 # Interval for logging mission paramters
 START = "5:00"
 FINISH = "19:00"
 RETRY = 5
@@ -58,7 +60,7 @@ LOG_FILE = USB_PATH + "turtle.log"
 port = serial.Serial(
     port = "/dev/ttyS0",
     baudrate=19200,
-    timeout=1,          # Wait time for data in sec
+    timeout=2,          # Wait time for data in sec
     parity = serial.PARITY_NONE,
     bytesize = serial.EIGHTBITS,
     stopbits = serial.STOPBITS_ONE
@@ -80,7 +82,7 @@ GPIO.setup(16, GPIO.OUT)
     If response not equal OK, resends again
     Return: response or 'None'
 '''
-def write(msg):
+def serial_send(msg):
     for i in range(0,RETRY):
         print("[" + str(i) + "] Sending: " + msg)
         # Flushing the buffer once
@@ -97,6 +99,22 @@ def write(msg):
     logging.debug("WARNING: Serial not responding")
     return "None"
 
+'''
+    Takes a file pointer and data string from GPS
+    Parses the data line and writes into CSV file
+    String Format: [Fix]_[Quality]_[Long]_[Lat]_[Speed]_[Angle]
+'''
+def parse_GPS(_file, _str):
+    # Writing time stamp
+    _file.write(datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S'))
+    # Splitting data
+    arr = _str.split("_")
+    # Writing in sequence
+    for element in arr:
+        _file.write(',' + element)
+    # End of data line
+    _file.write('\n')
+
 
 ###########################################
 ##                                       ##
@@ -112,7 +130,6 @@ GPIO.output(16, GPIO.HIGH)
 #
 #   USB initialization
 #
-
 # Unmonting USB and removing files
 sleep(10)
 os.system("sudo umount /dev/sda1")
@@ -149,42 +166,37 @@ sTime = int(hour)*60 + int(minute)
 hour,minute = FINISH.split(":")
 eTime = int(hour)*60 + int(minute)
 # Get Video Duration
-DURATION = (eTime - sTime) * 60
-logging.info('INTERVAL_' + str(sTime) + '_' + str(eTime))
-logging.info("Recording Time: " + str(DURATION))
-print("Recording Time: ", DURATION)
+REC_TIME = (eTime - sTime) * 60
+# Assembeling interval command
+Interval = 'INTERVAL_' + str(sTime) +'_'+ str(eTime) +'_'+ str(DURATION)
+logging.info(Interval)
+logging.info("Recording Time: " + str(REC_TIME))
+print("Recording Time: ", REC_TIME)
 
 #
 #   Send time INTERVAL to Arduino
 #
-# Format: INTERVAL_[START]_[FINISH] both times in minutes
-write(INTERVAL + '_' + str(sTime) + '_' + str(eTime))
+# Format: INTERVAL_[START]_[FINISH]_[DURATION] both times in minutes
+response = serial_send(Interval)
+# Retry 1
+if not response == ACK:
+    serial_send(Interval)
 sleep(1)
 
 #
 #   Send TIME commnad to Arduino
 #
-# Get current time from Arduino Format: YYYY-MM-DD hh:mm:ss
-for i in range(0,RETRY):
-    # Flushing the buffer once
-    if i == 0:
-        port.readline()
-    # Sending TIME
-    port.write(TIME)
-    time = port.readline()[:-2]
-    print("[" +str(i)+ "] TIME: " + time)
-    logging.info("[" +str(i)+ "] TIME: " + time)
-    # If valid time received
-    if not (time == ""):
-        # Set system time Format: YYYY-MM-DD hh:mm:ss
-        os.system("sudo date -s '" + time + "'")
-        break
+response = serial_send(TIME)
+# If valid time received
+# Set system time Format: YYYY-MM-DD hh:mm:ss
+if not (response == "None"):
+    os.system("sudo date -s '" +response+ "'")
 
 #
 #   Spawn Camera.py as child process
 #
 # python ../Camera.py DURATION (in minutes)
-camera = subprocess.Popen(['python', CAMERA_PATH, str(DURATION)],
+camera = subprocess.Popen(['python', CAMERA_PATH, str(REC_TIME)],
                         stdout = subprocess.PIPE,
                         stderr = subprocess.STDOUT)
 print("Child PID: ",camera.pid)
@@ -192,26 +204,49 @@ logging.info("Child PID: " + str(camera.pid))
 sleep(1)
 
 #
-#   Get GPS data and start new log
+#   Opening CSV file for GPS data recording
 #
-getGPS()
+# CSV file named using the current date
+CSV_FILE = USB_PATH + datetime.datetime.now().strftime('%Y-%m-%d') + '.csv'
+f_csv = open(CSV_FILE, "w")
+# Printing headers
+f_csv.write("Timestamp,Fix,Quality,Longitute,Latitude,Speed,Angle\n")
 
 #
 #   Main program Loop
 #
 print(" -- START LOOP -- ")
+# Start timing loop to retrieve GPS data
+timer1 = datetime.datetime.now()
+timer2 = datetime.datetime.now()
 # Check if camera recording
 poll = camera.poll()
-message = ""
 while poll == None:
 
-    #
     #   Check Serial
-    #
     message = port.readline()[:-2]
-    if(message != ""):
-        print("GOT: " + message)
-        logging.info("GOT: " + str(message))
+
+    #
+    #   get GPS data every 2 minutes
+    #
+    if((datetime.datetime.now() - timer1).seconds > GPS_INTERVAL):
+        response = serial_send(GPS)     # send GPS command
+        if not response == "None":
+            parse_GPS(f_csv, response)  # parse and write to file
+        timer1 = datetime.datetime.now() # reset timer
+
+    #
+    #   Log mission parameters every 5 minutes
+    #
+    if((datetime.datetime.now() - timer2).seconds > PARAM_INTERVAL):
+        response = serial_send(GPS)     # send GPS command
+        if not response == "None":
+            arr = response.split("_")
+            if len(arr) == 6:
+                logging.info("Mission -> start: " +arr[0]+ " now: " +arr[1]+ " end: " +arr[2])
+                logging.info("Timer   -> timer: " +arr[3]+ " duration: " +arr[4])
+                logging.info("Battery Voltage: " +arr[5])
+        timer2 = datetime.datetime.now() # reset timer
 
     #
     #   Sleep Command received
@@ -223,8 +258,6 @@ while poll == None:
         port.write(ACK)
         # Stop camera recording
         camera.terminate()
-        # Starting second GPS log
-	    getGPS()
         break
 
     # Check if still camera recording
@@ -232,10 +265,10 @@ while poll == None:
 #
 # END LOOP
 
-
 #
 #   Shutdown Routine
 #
+f_csv.close()
 # Unmounting USB
 print('UNMOUNTING USB')
 os.system("sudo umount /dev/sda1")
@@ -245,4 +278,3 @@ logging.info('EXIT TURTLE RECORDING')
 print('EXIT TURTLE RECORDING')
 # os.system("sudo shutdown -t now")
 sys.exit()
-

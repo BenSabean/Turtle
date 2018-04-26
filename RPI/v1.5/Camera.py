@@ -25,24 +25,24 @@ import datetime as dt
 import logging
 
 # File path's
-LOG_PATH = "/home/pi/Turtle/RPI/USB/camera.log"
-REC_PATH = "/home/pi/Turtle/RPI/USB/"
+USB_PATH = "/home/pi/Turtle/RPI/USB/"
+LOG_PATH = USB_PATH + "camera.log"
 
 # Creating Log file
 logging.basicConfig(filename=LOG_PATH, format='%(asctime)s %(message)s', level=logging.DEBUG)
 logging.info("CAMERA STARTED")
 
 # Checking command line arguments
-# (1) python (2) ../Camera.py (3) 50400
-if(len(sys.argv) != 3):
+# (0) ../Camera.py (1) 50400
+if not len(sys.argv) == 2:
     logging.info("WRONG ARGUMENT NUMBER")
     print("WRONG ARGUMENT NUMBER")
     sys.exit(0)
 
 # Logging start of recording
-logging.info("TIME: " + dt.datetime.now())
-logging.info("Recording Time: " + str(sys.argv[2]))
-recording_time = int(sys.argv[2])   # recording time in seconds
+logging.info("Recording Time: " + str(sys.argv[1]))
+# Extracting recording time in seconds
+recording_time = int(sys.argv[1])
 
 camera = picamera.PiCamera()
 try:
@@ -50,7 +50,6 @@ try:
     #
     #   Camera Initialization
     #
-    # Video Parameters
     camera.resolution = (1640, 922) # (1280x720)fullFoV (1640x922)16:9
     camera.framerate = 25
     camera.rotation = 180
@@ -58,7 +57,7 @@ try:
     camera.annotate_background = picamera.Color('black')
     camera.annotate_text = dt.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
     # Output file for saving
-    camera.start_recording(REC_PATH + dt.datetime.now().strftime('%Y-%m-%d_%H_%M_%S') + '.h264')
+    camera.start_recording(USB_PATH + dt.datetime.now().strftime('%Y-%m-%d_%H_%M_%S') + '.h264')
 
     #
     #   Recording Loop
@@ -71,7 +70,6 @@ try:
 except Exception as e:
     logging.debug(str(e))
 
-
 finally:
     #
     #   Exiting Routine
@@ -80,5 +78,3 @@ finally:
     logging.info("CAMERA CODE FINISHED")
     camera.stop_recording()
     camera.close()
-
-
