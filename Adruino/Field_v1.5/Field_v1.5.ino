@@ -82,7 +82,7 @@ void setup ()
   // Turn on Pi
   digitalWrite(MOSFET, LOW);
   // Keep Valve Closed
-  digitalWrite(VALVE, HIGH);
+  digitalWrite(VALVE, LOW);
 
   // GPS initialization commands
   GPS_init();
@@ -121,7 +121,7 @@ void loop ()
   //  Checking for Mission End & Triggering Release Valve
   //
   if (Timer > Duration)
-    digitalWrite(VALVE, LOW);
+    digitalWrite(VALVE, HIGH);
 
   //
   //  -------- Check for messages from Pi -------

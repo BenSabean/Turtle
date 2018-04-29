@@ -36,6 +36,7 @@ DURATION = 3*60*60  # Mission duration default 3 days - 10800 minutes
 REC_TIME = 10*60*60 # Camera timings default 10 hours per day - 36000
 GPS_INTERVAL = 2*60 # Interval to get gps data in seconds 120
 PARAM_INTERVAL = 5*60 # Interval for logging mission paramters
+DURATION = 2*24*60 # full mission duration in minutes
 START = "5:00"
 FINISH = "19:00"
 RETRY = 5
@@ -53,7 +54,7 @@ SD_UMOUNT_S = 20
 USB_PATH = "/home/pi/Turtle/RPI/USB/"
 CAMERA_PATH = "/home/pi/Turtle/RPI/Camera.py"
 # Need to be changes to .mission.json
-MISSION_FILE = USB_PATH + "mission.txt"
+MISSION_FILE = USB_PATH + ".mission.json"
 LOG_FILE = USB_PATH + "turtle.log"
 
 # Set communication parameters
@@ -69,7 +70,7 @@ port = serial.Serial(
 # GPIO setup
 GPIO.setmode(GPIO.BCM)
 GPIO.setwarnings(False)
-GPIO.setup(16, GPIO.OUT)
+GPIO.setup(18, GPIO.OUT)
 
 ###########################################
 ##                                       ##
@@ -125,7 +126,7 @@ def parse_GPS(_file, _str):
 #
 #   Setting Alive pin HIGH
 #
-GPIO.output(16, GPIO.HIGH)
+GPIO.output(18, GPIO.HIGH)
 
 #
 #   USB initialization
@@ -148,7 +149,7 @@ print("TURTLE CODE STARTED")
 #
 # Attempt to get mission data from JSON file
 try:
-    with open( USB_PATH + "mission.txt" ) as json_data_file:
+    with open( MISSION_FILE ) as json_data_file:
         mission = json.load(json_data_file)
     START = str(mission["start"])
     FINISH = str(mission["end"])
@@ -239,10 +240,11 @@ while poll == None:
     #   Log mission parameters every 5 minutes
     #
     if((datetime.datetime.now() - timer2).seconds > PARAM_INTERVAL):
-        response = serial_send(GPS)     # send GPS command
+        response = serial_send(PARAM)     # send GPS command
         if not response == "None":
             arr = response.split("_")
             if len(arr) == 6:
+		print("Writing paramters")
                 logging.info("Mission -> start: " +arr[0]+ " now: " +arr[1]+ " end: " +arr[2])
                 logging.info("Timer   -> timer: " +arr[3]+ " duration: " +arr[4])
                 logging.info("Battery Voltage: " +arr[5])
@@ -270,11 +272,11 @@ while poll == None:
 #
 f_csv.close()
 # Unmounting USB
+sleep(10)
+logging.info('EXIT TURTLE RECORDING')
 print('UNMOUNTING USB')
 os.system("sudo umount /dev/sda1")
 sleep(SD_UMOUNT_S) # Unmount Delay
 # Exiting & Shutting down
-logging.info('EXIT TURTLE RECORDING')
 print('EXIT TURTLE RECORDING')
-# os.system("sudo shutdown -t now")
-sys.exit()
+os.system("sudo shutdown -t now")
