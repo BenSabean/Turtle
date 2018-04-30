@@ -26,7 +26,7 @@ import logging
 
 # File path's
 USB_PATH = "/home/pi/Turtle/RPI/USB/"
-LOG_PATH = USB_PATH + "camera.log"
+LOG_PATH = "/home/pi/Turtle/RPI/camera.log"
 
 # Creating Log file
 logging.basicConfig(filename=LOG_PATH, format='%(asctime)s %(message)s', level=logging.DEBUG)
@@ -69,6 +69,7 @@ try:
 
 except Exception as e:
     logging.debug(str(e))
+    print(str(e))
 
 finally:
     #

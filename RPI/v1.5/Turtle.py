@@ -35,7 +35,7 @@ import datetime         # lib for system datetime
 DURATION = 3*60*60  # Mission duration default 3 days - 10800 minutes
 REC_TIME = 10*60*60 # Camera timings default 10 hours per day - 36000
 GPS_INTERVAL = 2*60 # Interval to get gps data in seconds 120
-PARAM_INTERVAL = 5*60 # Interval for logging mission paramters
+PARAM_INTERVAL = 1*60 # Interval for logging mission paramters
 DURATION = 2*24*60 # full mission duration in minutes
 START = "5:00"
 FINISH = "19:00"
@@ -55,7 +55,7 @@ USB_PATH = "/home/pi/Turtle/RPI/USB/"
 CAMERA_PATH = "/home/pi/Turtle/RPI/Camera.py"
 # Need to be changes to .mission.json
 MISSION_FILE = USB_PATH + ".mission.json"
-LOG_FILE = USB_PATH + "turtle.log"
+LOG_FILE = "/home/pi/Turtle/RPI/USB/turtle.log"
 
 # Set communication parameters
 port = serial.Serial(
@@ -98,6 +98,7 @@ def serial_send(msg):
             return resp
     # no response after all retries
     logging.debug("WARNING: Serial not responding")
+    print("WARNING: Serial not responding")
     return "None"
 
 '''
@@ -155,6 +156,7 @@ try:
     FINISH = str(mission["end"])
     DURATION = str(mission["duration"])
 except Exception as e:
+    print(str(e))
     logging.debug(str(e))
 
 #
@@ -172,6 +174,7 @@ REC_TIME = (eTime - sTime) * 60
 Interval = 'INTERVAL_' + str(sTime) +'_'+ str(eTime) +'_'+ str(DURATION)
 logging.info(Interval)
 logging.info("Recording Time: " + str(REC_TIME))
+print(Interval)
 print("Recording Time: ", REC_TIME)
 
 #
@@ -212,6 +215,8 @@ CSV_FILE = USB_PATH + datetime.datetime.now().strftime('%Y-%m-%d') + '.csv'
 f_csv = open(CSV_FILE, "w")
 # Printing headers
 f_csv.write("Timestamp,Fix,Quality,Longitute,Latitude,Speed,Angle\n")
+# Closing file
+f_csv.close()
 
 #
 #   Main program Loop
@@ -233,7 +238,9 @@ while poll == None:
     if((datetime.datetime.now() - timer1).seconds > GPS_INTERVAL):
         response = serial_send(GPS)     # send GPS command
         if not response == "None":
+            f_csv = open(CSV_FILE, "a")
             parse_GPS(f_csv, response)  # parse and write to file
+            f_csv.close()
         timer1 = datetime.datetime.now() # reset timer
 
     #
@@ -244,10 +251,8 @@ while poll == None:
         if not response == "None":
             arr = response.split("_")
             if len(arr) == 6:
-		print("Writing paramters")
-                logging.info("Mission -> start: " +arr[0]+ " now: " +arr[1]+ " end: " +arr[2])
-                logging.info("Timer   -> timer: " +arr[3]+ " duration: " +arr[4])
-                logging.info("Battery Voltage: " +arr[5])
+                print("Start: " +arr[0]+ " Now: " +arr[1]+ " End: " +arr[2]+ " Timer: " +arr[3]+ " Of " +arr[4])
+                logging.info("Start: " +arr[0]+ " Now: " +arr[1]+ " End: " +arr[2]+ " Timer: " +arr[3]+ " Of " +arr[4])
         timer2 = datetime.datetime.now() # reset timer
 
     #
@@ -279,4 +284,4 @@ os.system("sudo umount /dev/sda1")
 sleep(SD_UMOUNT_S) # Unmount Delay
 # Exiting & Shutting down
 print('EXIT TURTLE RECORDING')
-os.system("sudo shutdown -t now")
+#os.system("sudo shutdown -t now")

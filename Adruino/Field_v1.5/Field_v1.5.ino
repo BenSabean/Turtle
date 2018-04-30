@@ -50,8 +50,8 @@ Adafruit_GPS GPS (&GPS_COM);
 
 /* Time interval */
 // In Minutes (H*60 + M)
-// Default 5:00 to 19:00
-volatile int Start = 300, End = 1140, Now = 301;
+// Default 5:00 to 19:00 -> 300 to 1140
+volatile int Start = 0, End = 1500, Now = 1;
 // Mission duration in minutes
 // Default: 3 days = 72 h = 4320 minutes
 // Timer used to keep track of changes in mission duration
