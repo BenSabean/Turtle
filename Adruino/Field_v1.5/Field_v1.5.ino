@@ -29,7 +29,6 @@
 #define GET_GPS    "GPS"
 #define TIME       "TIME"
 #define SLEEP      "SLEEP"
-#define DURATION   "DURATION"
 #define DELIM      "_"
 #define PARAM      "PARAM"
 
@@ -39,8 +38,20 @@
 #define PI_CHECK  4
 #define GPS_RX    10
 #define GPS_TX    11
-#define VALVE     9
-#define BATTERY   A0
+
+  // Months
+#define JAN 1
+#define FEB 2
+#define MAR 3
+#define APR 4
+#define MAY 5
+#define JUN 6
+#define JUL 7
+#define AUG 8
+#define SEP 9
+#define _OCT 10
+#define NOV 11
+#define _DEC 12
 
 /* COM Setup */
 SoftwareSerial GPS_COM(GPS_RX, GPS_TX); // RX and TX for GPS COM
@@ -52,12 +63,6 @@ Adafruit_GPS GPS (&GPS_COM);
 // In Minutes (H*60 + M)
 // Default 5:00 to 19:00 -> 300 to 1140
 volatile int Start = 0, End = 1500, Now = 1;
-// Mission duration in minutes
-// Default: 3 days = 72 h = 4320 minutes
-// Timer used to keep track of changes in mission duration
-volatile int Duration = 4320, prevNow = 0, Timer = -2; // Timer changes two time in beginning
-// Battery monitoring
-volatile float Battery = 0;
 
 
 ///////////////////////////////////////////
@@ -76,13 +81,9 @@ void setup ()
   pinMode(PI_CHECK, INPUT);
   pinMode(7, INPUT);  // On first prototype TX and D7 shorted
   pinMode(MOSFET, OUTPUT);
-  pinMode(VALVE, OUTPUT);
-  pinMode(BATTERY, INPUT);
 
   // Turn on Pi
   digitalWrite(MOSFET, LOW);
-  // Keep Valve Closed
-  digitalWrite(VALVE, LOW);
 
   // GPS initialization commands
   GPS_init();
@@ -101,27 +102,11 @@ void loop ()
   memset(message, NULL, sizeof(message));
   bool Awake = digitalRead(PI_CHECK);     // Get Pi status
   bool Switch = digitalRead(SWITCH);      // Get Switch status
-  Battery = ((float) analogRead(BATTERY) * 5.0) / 1024.0; // Battery life tracking
 
   //
   //  Checking messages from GPS & Updating Time
   //
   GPS_update();
-
-  //
-  //  Keeping track of mission time every minute
-  //
-  if (prevNow != Now)
-  {
-    Timer ++;
-    prevNow = Now;
-  }
-
-  //
-  //  Checking for Mission End & Triggering Release Valve
-  //
-  if (Timer > Duration)
-    digitalWrite(VALVE, HIGH);
 
   //
   //  -------- Check for messages from Pi -------
@@ -154,7 +139,7 @@ void loop ()
     else if (strcmp(message, GET_GPS) == 0)
     {
       get_GPS(message);
-      Serial.println(message);  // Send Pi gps string
+      Serial.println(message);  // send Pi gps string
     }
 
     //
@@ -180,7 +165,7 @@ void loop ()
     if (Awake)
     {
       // SLEEP TIME //
-      if (Now > End || Now < Start)
+      if (Now >= End || Now <= Start)
         // Tell Pi to Sleep
         Serial.println(SLEEP);
       // AWAKE TIME //
@@ -192,7 +177,7 @@ void loop ()
     else
     {
       // AWAKE TIME //
-      if (Now > Start && Now < End)
+      if (Now >= Start && Now <= End)
         // Turn Pi Power ON
         digitalWrite(MOSFET, LOW);
       // SLEEP TIME //
@@ -212,6 +197,7 @@ void loop ()
       Serial.println(SLEEP);
     //  Pi is OFF //
     else
+      // Turn Pi Power OFF
       digitalWrite(MOSFET, HIGH);
   }
   //--------------------------------------------
@@ -231,7 +217,7 @@ void loop ()
 */
 int scan_time_interval(char* message)
 {
-  int _start = -1, _end = 9999, _dur = 20000;
+  int _start = -1, _end = 9999;
   char *p;
 
   // Extracting INTERVAL
@@ -248,19 +234,13 @@ int scan_time_interval(char* message)
   if (p == NULL) return 0;
   sscanf(p, "%d", &_end);
 
-  // Extracting DURATION
-  p = strtok(NULL, "_");
-  if (p == NULL) return 0;
-  sscanf(p, "%d", &_dur);
-
   // Error checking
-  if (_start > 0 && _start < 1439 && _end > 0 && _end < 1439 && _dur > 0 && _dur < 15000)
+  if (_start > 0 && _start < 1439 && _end > 0 && _end < 1439)
   {
     Serial.println(HANDSHAKE); // Letting Pi know we got data
     // Setting globals
     Start = _start;
     End = _end;
-    Duration = _dur;
     return 0; // break out of the loop
   }
   return 1;
@@ -283,12 +263,25 @@ void get_time_string(char* buff)
     hour += 24;
     day--;
   }
-  if (day < 0)
+
+
+  if (day <= 0)
   {
-    day += 29;
     month--;
+    if(month == JAN)        day += 31;
+    else if(month == FEB)   day += 28;
+    else if(month == MAR)   day += 31;
+    else if(month == APR)   day += 30;
+    else if(month == MAY)   day += 31;
+    else if(month == JUN)   day += 30;
+    else if(month == JUL)   day += 31;
+    else if(month == AUG)   day += 31;
+    else if(month == SEP)   day += 30;
+    else if(month == _OCT)  day += 31;
+    else if(month == NOV)   day += 30;
+    else if(month == _DEC)  day += 31;
   }
-  if (month < 0)
+  if (month <= 0)
   {
     month += 12;
     year--;
@@ -365,12 +358,9 @@ void get_GPS(char* buff)
 
 /*
    Checking mission parameters to make sure evething on track
-   Format: [START]_[NOW]_[END]_[TIMER]_[DURATION]_[BATTERY]
+   Format: [START]_[NOW]_[END]
 */
 void get_Paramters(char* buff)
 {
-  char batt[10];
-  dtostrf(Battery, 7, 6, batt);
-
-  sprintf(buff, "%d_%d_%d_%d_%d_%s", Start, Now, End, Timer, Duration, batt);
+  sprintf(buff, "%d_%d_%d", Start, Now, End);
 }

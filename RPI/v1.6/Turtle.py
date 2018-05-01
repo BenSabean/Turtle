@@ -17,13 +17,12 @@ email:   arthur.bondar.1@gmail.com
 import os
 from time import sleep
 import serial           # serial COM library
-import subprocess       # for subprocess opening
-import signal
 import json             # JSON for GPS parsing
 import sys              # os.system call
 import RPi.GPIO as GPIO # Pi GPIO access
 import logging          # lib for error logging
 import datetime         # lib for system datetime
+import picamera         # for camera recording
 
 ###########################################
 ##                                       ##
@@ -34,7 +33,8 @@ import datetime         # lib for system datetime
 # Mission
 REC_TIME = 10*60*60     # Camera timings default 10 hours per day - 36000 sec
 GPS_INTERVAL = 2*60     # Interval to get gps data in seconds - 120
-PARAM_INTERVAL = 1*60   # Interval for logging mission paramters in sec - 60
+PARAM_INTERVAL = 2*60   # Interval for logging mission paramters in sec - 60
+CAMERA_FAILED = False
 START = "5:00"
 FINISH = "19:00"
 RETRY = 5
@@ -47,13 +47,12 @@ GPS = "GPS"
 PARAM = "PARAM"
 # Delays
 SD_MOUNT_S = 30
-SD_UMOUNT_S = 10
+SD_UMOUNT_S = 20
 # File Path
 USB_PATH = "/home/pi/Turtle/RPI/USB/"
-CAMERA_PATH = "/home/pi/Turtle/RPI/Camera.py"
 # Need to be changes to .mission.json
 MISSION_FILE = USB_PATH + ".mission.json"
-LOG_FILE = "/home/pi/Turtle/RPI/USB/turtle.log"
+LOG_FILE = "/home/pi/Turtle/RPI/turtle.log"
 
 # Set communication parameters
 port = serial.Serial(
@@ -168,7 +167,7 @@ eTime = int(hour)*60 + int(minute)
 # Get Video Duration
 REC_TIME = (eTime - sTime) * 60
 # Assembeling interval command
-Interval = 'INTERVAL_' + str(sTime) +'_'+ str(eTime) +'_'+ str(DURATION)
+Interval = 'INTERVAL_' + str(sTime) +'_'+ str(eTime)
 logging.info(Interval)
 logging.info("Recording Time: " + str(REC_TIME))
 print(Interval)
@@ -195,17 +194,6 @@ if not (response == "None"):
     os.system("sudo date -s '" +response+ "'")
 
 #
-#   Spawn Camera.py as child process
-#
-# python ../Camera.py DURATION (in minutes)
-camera = subprocess.Popen(['python', CAMERA_PATH, str(REC_TIME)],
-                        stdout = subprocess.PIPE,
-                        stderr = subprocess.STDOUT)
-print("Child PID: ",camera.pid)
-logging.info("Child PID: " + str(camera.pid))
-sleep(1)
-
-#
 #   Opening CSV file for GPS data recording
 #
 # CSV file named using the current date
@@ -217,15 +205,36 @@ f_csv.write("Timestamp,Fix,Quality,Longitute,Latitude,Speed,Angle\n")
 f_csv.close()
 
 #
+#   CAMERA SETUP
+#
+camera = picamera.PiCamera()
+try:
+    #   Camera Initialization
+    camera.resolution = (1640, 922) # (1280x720)fullFoV (1640x922)16:9
+    camera.framerate = 25
+    camera.rotation = 180
+    # Text frame parameters
+    camera.annotate_background = picamera.Color('black')
+    camera.annotate_text = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+    # Output file for saving
+    camera.start_recording(USB_PATH + datetime.datetime.now().strftime('%Y-%m-%d_%H_%M_%S') + '.h264')
+    logging.info('CAMERA RECORDING STARTED')
+    print('CAMERA RECORDING STARTED')
+except Exception as e:
+    logging.debug(str(e))
+    print(str(e))
+    CAMERA_FAILED = True
+
+#
 #   Main program Loop
 #
 print(" -- START LOOP -- ")
 # Start timing loop to retrieve GPS data
 timer1 = datetime.datetime.now()
 timer2 = datetime.datetime.now()
-# Check if camera recording
-poll = camera.poll()
-while poll == None:
+# Camera timing
+start = datetime.datetime.now()
+while (datetime.datetime.now() - start).seconds < REC_TIME:
 
     #   Check Serial
     message = port.readline()[:-2]
@@ -261,23 +270,27 @@ while poll == None:
         logging.info("Sleep command recieved.")
         # Returning Acknowledgement
         port.write(ACK)
-        # Stop camera recording
-        camera.terminate()
         break
 
-    # Check if still camera recording
-    poll = camera.poll()
+    # Update Timer on the screen
+    if CAMERA_FAILED == False:
+        camera.annotate_text = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
 #
 # END LOOP
 
 #
 #   Shutdown Routine
 #
-logging.info('EXIT TURTLE RECORDING')
+# Finish recording
+if CAMERA_FAILED == False:
+    logging.info("CAMERA RECORDING FINISHED")
+    camera.stop_recording()
+    camera.close()
+logging.info('EXIT MAIN CODE')
 print('UNMOUNTING USB')
 # Unmounting USB
 sleep(SD_UMOUNT_S)
 os.system("sudo umount /dev/sda1")
 # Exiting & Shutting down
-print('EXIT TURTLE RECORDING')
+print('EXIT MAIN CODE')
 os.system("sudo shutdown -t now")
