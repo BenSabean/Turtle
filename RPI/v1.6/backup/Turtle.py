@@ -37,12 +37,7 @@ PARAM_INTERVAL = 2*60   # Interval for logging mission paramters in sec - 60
 CAMERA_FAILED = False
 START = "5:00"
 FINISH = "19:00"
-RETRY = 5		# Serial communication retranmitt
-# Default Parameters
-VIDEO_WIDTH = 1640
-VIDEO_HEIGHT = 922
-VIDEO_FRAME = 25
-VIDEO_ROTATE = 180
+RETRY = 5
 # Serial
 TIME = "TIME"
 ACK = "OK"
@@ -55,7 +50,8 @@ SD_MOUNT_S = 30
 SD_UMOUNT_S = 20
 # File Path
 USB_PATH = "/home/pi/Turtle/RPI/USB/"
-MISSION_FILE = USB_PATH + "mission.txt"
+# Need to be changes to .mission.json
+MISSION_FILE = USB_PATH + ".mission.json"
 LOG_FILE = "/home/pi/Turtle/RPI/turtle.log"
 
 # Set communication parameters
@@ -89,7 +85,7 @@ def serial_send(msg):
         print("[" + str(i) + "] Sending: " + msg)
         # Flushing the buffer once
         if i == 0:
-            port.reset_input_buffer()
+            port.readline()
         # Sending command
         port.write(msg)
         # Getting response
@@ -155,11 +151,6 @@ try:
         mission = json.load(json_data_file)
     START = str(mission["start"])
     FINISH = str(mission["end"])
-    VIDEO_WIDTH = int(mission["width"])
-    VIDEO_HEIGHT = int(mission["height"])
-    VIDEO_FRAME = int(mission["frames"])
-    VIDEO_ROTATE = int(mission["rotate"])
-    GPS_INTERVAL = int(mission["gps"])*60
 except Exception as e:
     print(str(e))
     logging.debug(str(e))
@@ -181,12 +172,11 @@ logging.info(Interval)
 logging.info("Recording Time: " + str(REC_TIME))
 print(Interval)
 print("Recording Time: ", REC_TIME)
-print("W: "+str(VIDEO_WIDTH)+" H: "+str(VIDEO_HEIGHT)+" F: "+str(VIDEO_FRAME)+" R: "+str(VIDEO_ROTATE)+" GPS: "+str(GPS_INTERVAL))
 
 #
 #   Send time INTERVAL to Arduino
 #
-port.reset_input_buffer()     # flush buffer
+port.readline()     # flush buffer
 # Format: INTERVAL_[START]_[FINISH] both times in minutes
 response = serial_send(Interval)
 # Retry 1
@@ -200,7 +190,7 @@ sleep(0.5)
 #
 #   Send TIME commnad to Arduino
 #
-port.reset_input_buffer() # flushing the buffer
+port.readline() # flushing the buffer
 response = serial_send(TIME)
 # If valid time received
 # Set system time Format: YYYY-MM-DD hh:mm:ss
@@ -224,9 +214,9 @@ f_csv.close()
 camera = picamera.PiCamera()
 try:
     #   Camera Initialization
-    camera.resolution = (VIDEO_WIDTH, VIDEO_HEIGHT) # (1280x720)fullFoV (1640x922)16:9
-    camera.framerate = VIDEO_FRAME
-    camera.rotation = VIDEO_ROTATE
+    camera.resolution = (1640, 922) # (1280x720)fullFoV (1640x922)16:9
+    camera.framerate = 25
+    camera.rotation = 180
     # Text frame parameters
     camera.annotate_background = picamera.Color('black')
     camera.annotate_text = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')

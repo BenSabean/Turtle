@@ -39,20 +39,6 @@
 #define GPS_RX    10
 #define GPS_TX    11
 
-  // Months
-#define JAN 1
-#define FEB 2
-#define MAR 3
-#define APR 4
-#define MAY 5
-#define JUN 6
-#define JUL 7
-#define AUG 8
-#define SEP 9
-#define _OCT 10
-#define NOV 11
-#define _DEC 12
-
 /* COM Setup */
 SoftwareSerial GPS_COM(GPS_RX, GPS_TX); // RX and TX for GPS COM
 
@@ -62,7 +48,7 @@ Adafruit_GPS GPS (&GPS_COM);
 /* Time interval */
 // In Minutes (H*60 + M)
 // Default 5:00 to 19:00 -> 300 to 1140
-volatile int Start = 0, End = 1500, Now = 1;
+volatile int Start = 300, End = 1140, Now = 301;
 
 
 ///////////////////////////////////////////
@@ -87,8 +73,6 @@ void setup ()
 
   // GPS initialization commands
   GPS_init();
-  // Flush serial buffer
-  Serial.readString();
 }
 
 ///////////////////////////////////////////
@@ -98,7 +82,7 @@ void setup ()
 ///////////////////////////////////////////
 void loop ()
 {
-  char message[100];
+  char message[50];
   memset(message, NULL, sizeof(message));
   bool Awake = digitalRead(PI_CHECK);     // Get Pi status
   bool Switch = digitalRead(SWITCH);      // Get Switch status
@@ -161,11 +145,12 @@ void loop ()
   //
   if (Switch)
   {
+    //
     //  Pi is ON //
     if (Awake)
     {
       // SLEEP TIME //
-      if (Now >= End || Now <= Start)
+      if (Now > End || Now < Start)
         // Tell Pi to Sleep
         Serial.println(SLEEP);
       // AWAKE TIME //
@@ -173,11 +158,12 @@ void loop ()
         // Turn Pi Power ON
         digitalWrite(MOSFET, LOW);
     }
+    //
     //  Pi is OFF //
     else
     {
       // AWAKE TIME //
-      if (Now >= Start && Now <= End)
+      if (Now > Start && Now < End)
         // Turn Pi Power ON
         digitalWrite(MOSFET, LOW);
       // SLEEP TIME //
@@ -191,10 +177,12 @@ void loop ()
   //
   else
   {
+    //
     //  Pi is ON //
     if (Awake)
       // Tell Pi to Sleep
       Serial.println(SLEEP);
+    //
     //  Pi is OFF //
     else
       // Turn Pi Power OFF
@@ -263,25 +251,12 @@ void get_time_string(char* buff)
     hour += 24;
     day--;
   }
-
-
-  if (day <= 0)
+  if (day < 1)
   {
+    day += 31;
     month--;
-    if(month == JAN)        day += 31;
-    else if(month == FEB)   day += 28;
-    else if(month == MAR)   day += 31;
-    else if(month == APR)   day += 30;
-    else if(month == MAY)   day += 31;
-    else if(month == JUN)   day += 30;
-    else if(month == JUL)   day += 31;
-    else if(month == AUG)   day += 31;
-    else if(month == SEP)   day += 30;
-    else if(month == _OCT)  day += 31;
-    else if(month == NOV)   day += 30;
-    else if(month == _DEC)  day += 31;
   }
-  if (month <= 0)
+  if (month < 1)
   {
     month += 12;
     year--;
@@ -295,8 +270,10 @@ void get_time_string(char* buff)
 void readString (char* buff, int len)
 {
   String msg;
-  msg = Serial.readString();
-  strcpy(buff, msg.c_str());
+  if (Serial.available()) {
+    msg = Serial.readString();
+    strcpy(buff, msg.c_str());
+  }
 }
 
 /*
@@ -316,7 +293,7 @@ void GPS_init()
   GPS.sendCommand(PMTK_SET_NMEA_UPDATE_1HZ);   // 1 Hz update rate
   // Disable Interrups
   TIMSK0 &= ~_BV(OCIE0A);
-  delay(1000);
+  delay(200);
 }
 
 /*
