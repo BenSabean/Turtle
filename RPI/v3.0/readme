@@ -1,0 +1,11 @@
+# Documentation
+
+- To use serial:
+    # run: sudo apt-get install python-serial
+    # disable serial login shell in raspi-config
+
+- Increased GPU memory from 128 to 256 (potential problem might be GPU overheating)
+
+- Installed exFAT support
+    $ sudo apt-get install exfat-utils exfat-fuse
+
