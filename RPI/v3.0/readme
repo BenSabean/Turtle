@@ -1,11 +1,17 @@
 # Documentation
 
 - To use serial:
-    # run: sudo apt-get install python-serial
+    $ sudo apt-get install python-serial
     # disable serial login shell in raspi-config
 
 - Increased GPU memory from 128 to 256 (potential problem might be GPU overheating)
 
 - Installed exFAT support
     $ sudo apt-get install exfat-utils exfat-fuse
+
+- Install python SMBuss module for I2C
+    $ sudo apt-get install python-smbus python3-smbus python-dev python3-dev
+    $ sudo apt-get install i2c-tools
+    in config.txt add dtparam=i2c1=on and dtparam=i2c_arm=on
+
 
