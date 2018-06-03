@@ -1,5 +1,13 @@
 #!/usr/bin/python2
 
+#
+# I2C function sends data in the following format:
+# 1. Register (2nd parameter in func)
+# 2. Message lenght 
+# 3. Byte array
+#
+
+
 from smbus import SMBus
 from time import sleep
 import sys

@@ -1,0 +1,136 @@
+    u'epx': 9.69,
+    u'epy': 12.154, 
+    u'epv': 20.93, 
+    u'ept': 0.005, 
+    u'lon': -63.588731667, 
+    u'eps': 24.31, 
+    u'epc': 41.86, 
+    u'lat': 44.671371667, 
+    u'mode': 3, 
+    u'time': u'2018-06-03T17:02:43.000Z', 
+    u'device': u'/dev/ttyS0', 
+    u'climb': 0.0, 
+    u'alt': 16.6, 
+    u'speed': 0.228, 
+    u'class': 
+    u'TPV'
+
+    u'epx': 9.69, 
+    u'epy': 12.154, 
+    u'epv': 20.93, 
+    u'ept': 0.005, 
+    u'lon': -63.588731667, 
+    u'eps': 24.31, 
+    u'epc': 41.86, 
+    u'lat': 44.671371667, 
+    u'track': 227.36, 
+    u'mode': 3, 
+    u'time': u'2018-06-03T17:02:43.000Z', 
+    u'device': 
+    u'/dev/ttyS0', 
+    u'climb': 0.0, 
+    u'alt': 16.6, 
+    u'speed': 0.103, 
+    u'class': 
+
+    u'epx': 9.69, 
+    u'epy': 12.154, 
+    u'epv': 20.93, 
+    u'ept': 0.005, 
+    u'lon': -63.588731667, 
+    u'eps': 24.31, 
+    u'epc': 41.86, 
+    u'lat': 44.671371667, 
+    u'mode': 3, 
+    u'time': 
+    u'2018-06-03T17:02:44.000Z', 
+    u'device': u'/dev/ttyS0', 
+    u'climb': 0.0, 
+    u'alt': 16.6, 
+    u'speed': 0.0, 
+    u'class': 
+    u'TPV'
+
+    {"class":"VERSION","release":"3.16","rev":"3.16-4","proto_major":3,"proto_minor":11}
+?WATCH={"enable":true,"json":true}
+{"class":"DEVICES","devices":[{"class":"DEVICE","path":"/dev/ttyS0","driver":"MTK-3301","subtype":"AXN_2.31_3339_13101700-5632","activated":"2018-06-03T17:59:12.597Z","flags":1,"native":0,"bps":9600,"parity":"N","stopbits":1,"cycle":1.00,"mincycle":0.20}]}
+{"class":"WATCH","enable":true,"json":true,"nmea":false,"raw":0,"scaled":false,"timing":false,"split24":false,"pps":false}
+{"class":"TPV","device":"/dev/ttyS0","mode":3,"time":"2018-06-03T17:59:13.000Z","ept":0.005,"lat":44.671365000,"lon":-63.588773333,"alt":16.900,"epx":9.690,"epy":12.154,"epv":50.140,"speed":0.185,"climb":0.000,"eps":24.31,"epc":100.28}
+{"class":"TPV","device":"/dev/ttyS0","mode":3,"time":"2018-06-03T17:59:13.000Z","ept":0.005,"lat":44.671365000,"lon":-63.588773333,"alt":16.900,"epx":9.690,"epy":12.154,"epv":50.140,"track":6.8500,"speed":0.211,"climb":0.000,"eps":24.31,"epc":100.28}
+{"class":"TPV","device":"/dev/ttyS0","mode":3,"time":"2018-06-03T17:59:14.000Z","ept":0.005,"lat":44.671366667,"lon":-63.588773333,"alt":16.900,"epx":9.690,"epy":12.154,"epv":50.140,"speed":0.185,"climb":0.000,"eps":24.31,"epc":100.28}
+{"class":"TPV","device":"/dev/ttyS0","mode":3,"time":"2018-06-03T17:59:14.000Z","ept":0.005,"lat":44.671366667,"lon":-63.588773333,"alt":16.900,"epx":9.690,"epy":12.154,"epv":50.140,"track":4.6900,"speed":0.180,"climb":0.000,"eps":24.31,"epc":100.28}
+{"class":"TPV","device":"/dev/ttyS0","mode":3,"time":"2018-06-03T17:59:15.000Z","ept":0.005,"lat":44.671368333,"lon":-63.588773333,"alt":16.900,"epx":9.690,"epy":12.154,"epv":50.140,"speed":0.185,"climb":0.000,"eps":24.31,"epc":100.28}
+{"class":"TPV","device":"/dev/ttyS0","mode":3,"time":"2018-06-03T17:59:15.000Z","ept":0.005,"lat":44.671368333,"lon":-63.588773333,"alt":16.900,"epx":9.690,"epy":12.154,"epv":50.140,"track":349.5400,"speed":0.211,"climb":0.000,"eps":24.31,"epc":100.28}
+{"class":"TPV","device":"/dev/ttyS0","mode":3,"time":"2018-06-03T17:59:16.000Z","ept":0.005,"lat":44.671370000,"lon":-63.588773333,"alt":16.900,"epx":9.690,"epy":12.154,"epv":50.140,"speed":0.185,"climb":0.000,"eps":24.31,"epc":100.28}
+{"class":"SKY","device":"/dev/ttyS0","xdop":0.65,"ydop":0.81,"vdop":2.18,"tdop":1.15,"hdop":1.73,"gdop":2.27,"pdop":2.78,"satellites":[{"PRN":11,"el":81,"az":118,"ss":30,"used":true},{"PRN":18,"el":65,"az":89,"ss":16,"used":true},{"PRN":1,"el":65,"az":156,"ss":23,"used":true},{"PRN":28,"el":51,"az":309,"ss":31,"used":true},{"PRN":30,"el":51,"az":244,"ss":15,"used":true},{"PRN":8,"el":42,"az":63,"ss":28,"used":true},{"PRN":7,"el":39,"az":205,"ss":0,"used":false},{"PRN":17,"el":16,"az":258,"ss":24,"used":true},{"PRN":22,"el":15,"az":131,"ss":0,"used":false},{"PRN":10,"el":8,"az":34,"ss":0,"used":false},{"PRN":13,"el":7,"az":301,"ss":0,"used":false},{"PRN":27,"el":6,"az":71,"ss":0,"used":false},{"PRN":3,"el":3,"az":151,"ss":0,"used":false},{"PRN":133,"el":0,"az":0,"ss":0,"used":false}]}
+{"class":"TPV","device":"/dev/ttyS0","mode":3,"time":"2018-06-03T17:59:16.000Z","ept":0.005,"lat":44.671370000,"lon":-63.588773333,"alt":16.900,"epx":9.690,"epy":12.154,"epv":50.140,"track":356.3600,"speed":0.231,"climb":0.000,"eps":24.31,"epc":100.28}
+{"class":"TPV","device":"/dev/ttyS0","mode":3,"time":"2018-06-03T17:59:17.000Z","ept":0.005,"lat":44.671371667,"lon":-63.588775000,"alt":16.900,"epx":9.690,"epy":12.154,"epv":50.140,"speed":0.228,"climb":0.000,"eps":24.31,"epc":100.28}
+{"class":"TPV","device":"/dev/ttyS0","mode":3,"time":"2018-06-03T17:59:17.000Z","ept":0.005,"lat":44.671371667,"lon":-63.588775000,"alt":16.900,"epx":9.690,"epy":12.154,"epv":50.140,"track":3.8100,"speed":0.211,"climb":0.000,"eps":24.31,"epc":100.28}
+{"class":"TPV","device":"/dev/ttyS0","mode":3,"time":"2018-06-03T17:59:18.000Z","ept":0.005,"lat":44.671375000,"lon":-63.588775000,"alt":16.800,"epx":9.690,"epy":12.154,"epv":50.140,"speed":0.370,"climb":-0.100,"eps":24.31,"epc":100.28}
+{"class":"TPV","device":"/dev/ttyS0","mode":3,"time":"2018-06-03T17:59:18.000Z","ept":0.005,"lat":44.671375000,"lon":-63.588775000,"alt":16.800,"epx":9.690,"epy":12.154,"epv":50.140,"track":0.5300,"speed":0.123,"climb":-0.100,"eps":24.31,"epc":100.28}
+{"class":"TPV","device":"/dev/ttyS0","mode":3,"time":"2018-06-03T17:59:19.000Z","ept":0.005,"lat":44.671375000,"lon":-63.588775000,"alt":16.800,"epx":9.690,"epy":12.154,"epv":50.140,"speed":0.000,"climb":0.000,"eps":24.31,"epc":100.28}
+{"class":"TPV","device":"/dev/ttyS0","mode":3,"time":"2018-06-03T17:59:19.000Z","ept":0.005,"lat":44.671375000,"lon":-63.588775000,"alt":16.800,"epx":9.690,"epy":12.154,"epv":50.140,"track":353.3100,"speed":0.098,"climb":0.000,"eps":24.31,"epc":100.28}
+{"class":"TPV","device":"/dev/ttyS0","mode":3,"time":"2018-06-03T17:59:20.000Z","ept":0.005,"lat":44.671376667,"lon":-63.588775000,"alt":16.800,"epx":9.690,"epy":12.154,"epv":50.140,"speed":0.185,"climb":0.000,"eps":24.31,"epc":100.28}
+{"class":"TPV","device":"/dev/ttyS0","mode":3,"time":"2018-06-03T17:59:20.000Z","ept":0.005,"lat":44.671376667,"lon":-63.588775000,"alt":16.800,"epx":9.690,"epy":12.154,"epv":50.140,"track":351.8300,"speed":0.021,"climb":0.000,"eps":24.31,"epc":100.28}
+{"class":"TPV","device":"/dev/ttyS0","mode":3,"time":"2018-06-03T17:59:21.000Z","ept":0.005,"lat":44.671376667,"lon":-63.588775000,"alt":16.800,"epx":9.690,"epy":12.154,"epv":50.140,"speed":0.000,"climb":0.000,"eps":24.31,"epc":100.28}
+{"class":"SKY","device":"/dev/ttyS0","xdop":0.65,"ydop":0.81,"vdop":2.18,"tdop":1.15,"hdop":1.73,"gdop":2.27,"pdop":2.78,"satellites":[{"PRN":11,"el":81,"az":118,"ss":30,"used":true},{"PRN":18,"el":65,"az":89,"ss":15,"used":true},{"PRN":1,"el":65,"az":156,"ss":25,"used":true},{"PRN":28,"el":51,"az":309,"ss":32,"used":true},{"PRN":30,"el":51,"az":244,"ss":16,"used":true},{"PRN":8,"el":42,"az":63,"ss":30,"used":true},{"PRN":7,"el":39,"az":204,"ss":0,"used":false},{"PRN":17,"el":16,"az":258,"ss":24,"used":true},{"PRN":22,"el":15,"az":131,"ss":0,"used":false},{"PRN":10,"el":8,"az":34,"ss":0,"used":false},{"PRN":13,"el":7,"az":301,"ss":0,"used":false},{"PRN":27,"el":6,"az":71,"ss":0,"used":false},{"PRN":3,"el":3,"az":151,"ss":0,"used":false},{"PRN":134,"el":0,"az":0,"ss":0,"used":false}]}
+{"class":"TPV","device":"/dev/ttyS0","mode":3,"time":"2018-06-03T17:59:21.000Z","ept":0.005,"lat":44.671376667,"lon":-63.588775000,"alt":16.800,"epx":9.690,"epy":12.154,"epv":50.140,"track":220.4700,"speed":0.062,"climb":0.000,"eps":24.31,"epc":100.28}
+{"class":"TPV","device":"/dev/ttyS0","mode":3,"time":"2018-06-03T17:59:22.000Z","ept":0.005,"lat":44.671376667,"lon":-63.588775000,"alt":16.800,"epx":9.690,"epy":12.154,"epv":50.140,"speed":0.000,"climb":0.000,"eps":24.31,"epc":100.28}
+{"class":"TPV","device":"/dev/ttyS0","mode":3,"time":"2018-06-03T17:59:22.000Z","ept":0.005,"lat":44.671376667,"lon":-63.588775000,"alt":16.800,"epx":9.690,"epy":12.154,"epv":50.140,"track":208.8600,"speed":0.103,"climb":0.000,"eps":24.31,"epc":100.28}
+{"class":"TPV","device":"/dev/ttyS0","mode":3,"time":"2018-06-03T17:59:23.000Z","ept":0.005,"lat":44.671375000,"lon":-63.588775000,"alt":16.800,"epx":9.690,"epy":12.154,"epv":20.700,"speed":0.185,"climb":0.000,"eps":24.31,"epc":70.84}
+{"class":"TPV","device":"/dev/ttyS0","mode":3,"time":"2018-06-03T17:59:23.000Z","ept":0.005,"lat":44.671375000,"lon":-63.588775000,"alt":16.800,"epx":9.690,"epy":12.154,"epv":20.700,"track":194.8500,"speed":0.129,"climb":0.000,"eps":24.31,"epc":70.84}
+{"class":"TPV","device":"/dev/ttyS0","mode":3,"time":"2018-06-03T17:59:24.000Z","ept":0.005,"lat":44.671373333,"lon":-63.588776667,"alt":16.800,"epx":9.690,"epy":12.154,"epv":20.700,"speed":0.228,"climb":0.000,"eps":24.31,"epc":41.40}
+{"class":"TPV","device":"/dev/ttyS0","mode":3,"time":"2018-06-03T17:59:24.000Z","ept":0.005,"lat":44.671373333,"lon":-63.588776667,"alt":16.800,"epx":9.690,"epy":12.154,"epv":20.700,"track":185.6100,"speed":0.139,"climb":0.000,"eps":24.31,"epc":41.40}
+{"class":"TPV","device":"/dev/ttyS0","mode":3,"time":"2018-06-03T17:59:25.000Z","ept":0.005,"lat":44.671373333,"lon":-63.588776667,"alt":16.800,"epx":9.690,"epy":12.154,"epv":20.700,"speed":0.000,"climb":0.000,"eps":24.31,"epc":41.40}
+{"class":"TPV","device":"/dev/ttyS0","mode":3,"time":"2018-06-03T17:59:25.000Z","ept":0.005,"lat":44.671373333,"lon":-63.588776667,"alt":16.800,"epx":9.690,"epy":12.154,"epv":20.700,"track":193.2400,"speed":0.113,"climb":0.000,"eps":24.31,"epc":41.40}
+{"class":"TPV","device":"/dev/ttyS0","mode":3,"time":"2018-06-03T17:59:26.000Z","ept":0.005,"lat":44.671371667,"lon":-63.588776667,"alt":16.800,"epx":9.690,"epy":12.154,"epv":20.700,"speed":0.185,"climb":0.000,"eps":24.31,"epc":41.40}
+{"class":"SKY","device":"/dev/ttyS0","xdop":0.65,"ydop":0.81,"vdop":0.90,"tdop":1.15,"hdop":1.33,"gdop":2.27,"pdop":1.60,"satellites":[{"PRN":11,"el":81,"az":116,"ss":30,"used":true},{"PRN":18,"el":65,"az":89,"ss":15,"used":true},{"PRN":1,"el":65,"az":156,"ss":25,"used":true},{"PRN":28,"el":51,"az":309,"ss":32,"used":true},{"PRN":30,"el":51,"az":244,"ss":15,"used":true},{"PRN":8,"el":42,"az":63,"ss":31,"used":true},{"PRN":7,"el":39,"az":204,"ss":17,"used":true},{"PRN":17,"el":16,"az":258,"ss":26,"used":true},{"PRN":22,"el":15,"az":131,"ss":0,"used":false},{"PRN":10,"el":8,"az":34,"ss":0,"used":false},{"PRN":13,"el":7,"az":301,"ss":0,"used":false},{"PRN":27,"el":6,"az":71,"ss":0,"used":false},{"PRN":3,"el":3,"az":151,"ss":0,"used":false},{"PRN":136,"el":0,"az":0,"ss":0,"used":false}]}
+{"class":"TPV","device":"/dev/ttyS0","mode":3,"time":"2018-06-03T17:59:26.000Z","ept":0.005,"lat":44.671371667,"lon":-63.588776667,"alt":16.800,"epx":9.690,"epy":12.154,"epv":20.700,"track":206.1000,"speed":0.134,"climb":0.000,"eps":24.31,"epc":41.40}
+{"class":"TPV","device":"/dev/ttyS0","mode":3,"time":"2018-06-03T17:59:27.000Z","ept":0.005,"lat":44.671371667,"lon":-63.588778333,"alt":16.800,"epx":9.690,"epy":12.154,"epv":20.700,"speed":0.132,"climb":0.000,"eps":24.31,"epc":41.40}
+{"class":"TPV","device":"/dev/ttyS0","mode":3,"time":"2018-06-03T17:59:27.000Z","ept":0.005,"lat":44.671371667,"lon":-63.588778333,"alt":16.800,"epx":9.690,"epy":12.154,"epv":20.700,"track":216.2200,"speed":0.134,"climb":0.000,"eps":24.31,"epc":41.40}
+{"class":"TPV","device":"/dev/ttyS0","mode":3,"time":"2018-06-03T17:59:28.000Z","ept":0.005,"lat":44.671370000,"lon":-63.588778333,"alt":16.800,"epx":9.690,"epy":12.154,"epv":20.700,"speed":0.185,"climb":0.000,"eps":24.31,"epc":41.40}
+{"class":"TPV","device":"/dev/ttyS0","mode":3,"time":"2018-06-03T17:59:28.000Z","ept":0.005,"lat":44.671370000,"lon":-63.588778333,"alt":16.800,"epx":9.690,"epy":12.154,"epv":20.700,"track":205.9300,"speed":0.087,"climb":0.000,"eps":24.31,"epc":41.40}
+{"class":"TPV","device":"/dev/ttyS0","mode":3,"time":"2018-06-03T17:59:29.000Z","ept":0.005,"lat":44.671370000,"lon":-63.588778333,"alt":16.800,"epx":9.690,"epy":12.154,"epv":20.700,"speed":0.000,"climb":0.000,"eps":24.31,"epc":41.40}
+{"class":"TPV","device":"/dev/ttyS0","mode":3,"time":"2018-06-03T17:59:29.000Z","ept":0.005,"lat":44.671370000,"lon":-63.588778333,"alt":16.800,"epx":9.690,"epy":12.154,"epv":20.700,"track":238.9300,"speed":0.046,"climb":0.000,"eps":24.31,"epc":41.40}
+{"class":"TPV","device":"/dev/ttyS0","mode":3,"time":"2018-06-03T17:59:30.000Z","ept":0.005,"lat":44.671370000,"lon":-63.588780000,"alt":16.800,"epx":9.690,"epy":12.154,"epv":20.700,"speed":0.132,"climb":0.000,"eps":24.31,"epc":41.40}
+{"class":"TPV","device":"/dev/ttyS0","mode":3,"time":"2018-06-03T17:59:30.000Z","ept":0.005,"lat":44.671370000,"lon":-63.588780000,"alt":16.800,"epx":9.690,"epy":12.154,"epv":20.700,"track":298.7600,"speed":0.041,"climb":0.000,"eps":24.31,"epc":41.40}
+{"class":"TPV","device":"/dev/ttyS0","mode":3,"time":"2018-06-03T17:59:31.000Z","ept":0.005,"lat":44.671370000,"lon":-63.588780000,"alt":16.800,"epx":9.690,"epy":12.154,"epv":20.700,"speed":0.000,"climb":0.000,"eps":24.31,"epc":41.40}
+{"class":"SKY","device":"/dev/ttyS0","xdop":0.65,"ydop":0.81,"vdop":0.90,"tdop":1.15,"hdop":1.33,"gdop":2.27,"pdop":1.60,"satellites":[{"PRN":11,"el":81,"az":116,"ss":29,"used":true},{"PRN":18,"el":65,"az":88,"ss":17,"used":true},{"PRN":1,"el":65,"az":156,"ss":26,"used":true},{"PRN":28,"el":51,"az":309,"ss":32,"used":true},{"PRN":30,"el":51,"az":244,"ss":16,"used":true},{"PRN":8,"el":42,"az":63,"ss":31,"used":true},{"PRN":7,"el":39,"az":204,"ss":17,"used":true},{"PRN":17,"el":16,"az":258,"ss":24,"used":true},{"PRN":22,"el":15,"az":131,"ss":0,"used":false},{"PRN":10,"el":8,"az":34,"ss":0,"used":false},{"PRN":13,"el":7,"az":301,"ss":0,"used":false},{"PRN":27,"el":6,"az":71,"ss":0,"used":false},{"PRN":3,"el":3,"az":151,"ss":0,"used":false},{"PRN":136,"el":0,"az":0,"ss":0,"used":false}]}
+{"class":"TPV","device":"/dev/ttyS0","mode":3,"time":"2018-06-03T17:59:31.000Z","ept":0.005,"lat":44.671370000,"lon":-63.588780000,"alt":16.800,"epx":9.690,"epy":12.154,"epv":20.700,"track":204.1300,"speed":0.015,"climb":0.000,"eps":24.31,"epc":41.40}
+{"class":"TPV","device":"/dev/ttyS0","mode":3,"time":"2018-06-03T17:59:32.000Z","ept":0.005,"lat":44.671370000,"lon":-63.588780000,"alt":16.800,"epx":9.690,"epy":12.154,"epv":20.700,"speed":0.000,"climb":0.000,"eps":24.31,"epc":41.40}
+{"class":"TPV","device":"/dev/ttyS0","mode":3,"time":"2018-06-03T17:59:32.000Z","ept":0.005,"lat":44.671370000,"lon":-63.588780000,"alt":16.800,"epx":9.690,"epy":12.154,"epv":20.700,"track":284.6600,"speed":0.072,"climb":0.000,"eps":24.31,"epc":41.40}
+{"class":"TPV","device":"/dev/ttyS0","mode":3,"time":"2018-06-03T17:59:33.000Z","ept":0.005,"lat":44.671370000,"lon":-63.588781667,"alt":16.800,"epx":9.690,"epy":12.154,"epv":20.700,"speed":0.132,"climb":0.000,"eps":24.31,"epc":41.40}
+{"class":"TPV","device":"/dev/ttyS0","mode":3,"time":"2018-06-03T17:59:33.000Z","ept":0.005,"lat":44.671370000,"lon":-63.588781667,"alt":16.800,"epx":9.690,"epy":12.154,"epv":20.700,"track":289.9600,"speed":0.103,"climb":0.000,"eps":24.31,"epc":41.40}
+{"class":"TPV","device":"/dev/ttyS0","mode":3,"time":"2018-06-03T17:59:34.000Z","ept":0.005,"lat":44.671370000,"lon":-63.588781667,"alt":16.800,"epx":9.690,"epy":12.154,"epv":20.700,"speed":0.000,"climb":0.000,"eps":24.31,"epc":41.40}
+{"class":"TPV","device":"/dev/ttyS0","mode":3,"time":"2018-06-03T17:59:34.000Z","ept":0.005,"lat":44.671370000,"lon":-63.588781667,"alt":16.800,"epx":9.690,"epy":12.154,"epv":20.700,"track":283.9900,"speed":0.129,"climb":0.000,"eps":24.31,"epc":41.40}
+{"class":"TPV","device":"/dev/ttyS0","mode":3,"time":"2018-06-03T17:59:35.000Z","ept":0.005,"lat":44.671370000,"lon":-63.588783333,"alt":16.800,"epx":9.690,"epy":12.154,"epv":20.700,"speed":0.132,"climb":0.000,"eps":24.31,"epc":41.40}
+{"class":"TPV","device":"/dev/ttyS0","mode":3,"time":"2018-06-03T17:59:35.000Z","ept":0.005,"lat":44.671370000,"lon":-63.588783333,"alt":16.800,"epx":9.690,"epy":12.154,"epv":20.700,"track":308.0300,"speed":0.159,"climb":0.000,"eps":24.31,"epc":41.40}
+{"class":"TPV","device":"/dev/ttyS0","mode":3,"time":"2018-06-03T17:59:36.000Z","ept":0.005,"lat":44.671371667,"lon":-63.588785000,"alt":16.800,"epx":9.690,"epy":12.154,"epv":20.700,"speed":0.228,"climb":0.000,"eps":24.31,"epc":41.40}
+{"class":"SKY","device":"/dev/ttyS0","xdop":0.65,"ydop":0.81,"vdop":0.90,"tdop":1.15,"hdop":1.33,"gdop":2.27,"pdop":1.60,"satellites":[{"PRN":11,"el":81,"az":116,"ss":30,"used":true},{"PRN":18,"el":65,"az":88,"ss":17,"used":true},{"PRN":1,"el":65,"az":156,"ss":26,"used":true},{"PRN":28,"el":51,"az":309,"ss":32,"used":true},{"PRN":30,"el":51,"az":244,"ss":17,"used":true},{"PRN":8,"el":42,"az":63,"ss":31,"used":true},{"PRN":7,"el":39,"az":204,"ss":16,"used":true},{"PRN":138,"el":22,"az":233,"ss":0,"used":false},{"PRN":17,"el":16,"az":258,"ss":24,"used":true},{"PRN":22,"el":16,"az":130,"ss":0,"used":false},{"PRN":10,"el":8,"az":34,"ss":0,"used":false},{"PRN":13,"el":7,"az":301,"ss":0,"used":false},{"PRN":27,"el":6,"az":71,"ss":0,"used":false},{"PRN":3,"el":3,"az":151,"ss":0,"used":false}]}
+{"class":"TPV","device":"/dev/ttyS0","mode":3,"time":"2018-06-03T17:59:36.000Z","ept":0.005,"lat":44.671371667,"lon":-63.588785000,"alt":16.800,"epx":9.690,"epy":12.154,"epv":20.700,"track":332.2500,"speed":0.206,"climb":0.000,"eps":24.31,"epc":41.40}
+{"class":"TPV","device":"/dev/ttyS0","mode":3,"time":"2018-06-03T17:59:37.000Z","ept":0.005,"lat":44.671373333,"lon":-63.588786667,"alt":16.800,"epx":9.690,"epy":12.154,"epv":20.700,"speed":0.228,"climb":0.000,"eps":24.31,"epc":41.40}
+{"class":"TPV","device":"/dev/ttyS0","mode":3,"time":"2018-06-03T17:59:37.000Z","ept":0.005,"lat":44.671373333,"lon":-63.588786667,"alt":16.800,"epx":9.690,"epy":12.154,"epv":20.700,"track":342.3800,"speed":0.221,"climb":0.000,"eps":24.31,"epc":41.40}
+{"class":"TPV","device":"/dev/ttyS0","mode":3,"time":"2018-06-03T17:59:38.000Z","ept":0.005,"lat":44.671375000,"lon":-63.588786667,"alt":16.800,"epx":9.690,"epy":12.154,"epv":20.700,"speed":0.185,"climb":0.000,"eps":24.31,"epc":41.40}
+{"class":"TPV","device":"/dev/ttyS0","mode":3,"time":"2018-06-03T17:59:38.000Z","ept":0.005,"lat":44.671375000,"lon":-63.588786667,"alt":16.800,"epx":9.690,"epy":12.154,"epv":20.700,"track":356.2800,"speed":0.273,"climb":0.000,"eps":24.31,"epc":41.40}
+{"class":"TPV","device":"/dev/ttyS0","mode":3,"time":"2018-06-03T17:59:39.000Z","ept":0.005,"lat":44.671378333,"lon":-63.588786667,"alt":16.800,"epx":9.690,"epy":12.154,"epv":20.700,"speed":0.370,"climb":0.000,"eps":24.31,"epc":41.40}
+{"class":"TPV","device":"/dev/ttyS0","mode":3,"time":"2018-06-03T17:59:39.000Z","ept":0.005,"lat":44.671378333,"lon":-63.588786667,"alt":16.800,"epx":9.690,"epy":12.154,"epv":20.700,"track":18.1200,"speed":0.211,"climb":0.000,"eps":24.31,"epc":41.40}
+{"class":"TPV","device":"/dev/ttyS0","mode":3,"time":"2018-06-03T17:59:40.000Z","ept":0.005,"lat":44.671380000,"lon":-63.588786667,"alt":16.800,"epx":9.690,"epy":12.154,"epv":48.530,"speed":0.185,"climb":0.000,"eps":24.31,"epc":69.23}
+{"class":"TPV","device":"/dev/ttyS0","mode":3,"time":"2018-06-03T17:59:40.000Z","ept":0.005,"lat":44.671380000,"lon":-63.588786667,"alt":16.800,"epx":9.690,"epy":12.154,"epv":48.530,"track":17.7400,"speed":0.129,"climb":0.000,"eps":24.31,"epc":69.23}
+{"class":"TPV","device":"/dev/ttyS0","mode":3,"time":"2018-06-03T17:59:41.000Z","ept":0.005,"lat":44.671381667,"lon":-63.588786667,"alt":16.800,"epx":9.690,"epy":12.154,"epv":20.700,"speed":0.185,"climb":0.000,"eps":24.31,"epc":69.23}
+{"class":"SKY","device":"/dev/ttyS0","xdop":0.65,"ydop":0.81,"vdop":0.90,"tdop":1.15,"hdop":1.33,"gdop":2.27,"pdop":1.60,"satellites":[{"PRN":11,"el":81,"az":116,"ss":30,"used":true},{"PRN":18,"el":65,"az":88,"ss":18,"used":true},{"PRN":1,"el":65,"az":156,"ss":26,"used":true},{"PRN":28,"el":52,"az":309,"ss":32,"used":true},{"PRN":30,"el":51,"az":244,"ss":19,"used":true},{"PRN":8,"el":42,"az":63,"ss":31,"used":true},{"PRN":7,"el":39,"az":204,"ss":15,"used":true},{"PRN":138,"el":22,"az":233,"ss":0,"used":false},{"PRN":17,"el":16,"az":258,"ss":24,"used":true},{"PRN":22,"el":16,"az":130,"ss":0,"used":false},{"PRN":10,"el":8,"az":34,"ss":0,"used":false},{"PRN":13,"el":7,"az":301,"ss":0,"used":false},{"PRN":27,"el":6,"az":71,"ss":0,"used":false},{"PRN":3,"el":3,"az":151,"ss":0,"used":false}]}
+{"class":"TPV","device":"/dev/ttyS0","mode":3,"time":"2018-06-03T17:59:41.000Z","ept":0.005,"lat":44.671381667,"lon":-63.588786667,"alt":16.800,"epx":9.690,"epy":12.154,"epv":20.700,"track":358.4100,"speed":0.113,"climb":0.000,"eps":24.31,"epc":69.23}
+{"class":"TPV","device":"/dev/ttyS0","mode":3,"time":"2018-06-03T17:59:42.000Z","ept":0.005,"lat":44.671381667,"lon":-63.588786667,"alt":16.800,"epx":9.690,"epy":12.154,"epv":20.700,"speed":0.000,"climb":0.000,"eps":24.31,"epc":41.40}
+{"class":"TPV","device":"/dev/ttyS0","mode":3,"time":"2018-06-03T17:59:42.000Z","ept":0.005,"lat":44.671381667,"lon":-63.588786667,"alt":16.800,"epx":9.690,"epy":12.154,"epv":20.700,"track":4.4400,"speed":0.098,"climb":0.000,"eps":24.31,"epc":41.40}
+{"class":"TPV","device":"/dev/ttyS0","mode":3,"time":"2018-06-03T17:59:43.000Z","ept":0.005,"lat":44.671383333,"lon":-63.588785000,"alt":16.800,"epx":9.690,"epy":12.154,"epv":48.530,"speed":0.228,"climb":0.000,"eps":24.31,"epc":69.23}
+{"class":"TPV","device":"/dev/ttyS0","mode":3,"time":"2018-06-03T17:59:43.000Z","ept":0.005,"lat":44.671383333,"lon":-63.588785000,"alt":16.800,"epx":9.690,"epy":12.154,"epv":48.530,"track":337.3400,"speed":0.129,"climb":0.000,"eps":24.31,"epc":69.23}
+{"class":"TPV","device":"/dev/ttyS0","mode":3,"time":"2018-06-03T17:59:44.000Z","ept":0.005,"lat":44.671385000,"lon":-63.588786667,"alt":16.800,"epx":9.690,"epy":12.154,"epv":48.530,"speed":0.228,"climb":0.000,"eps":24.31,"epc":97.06}
+{"class":"TPV","device":"/dev/ttyS0","mode":3,"time":"2018-06-03T17:59:44.000Z","ept":0.005,"lat":44.671385000,"lon":-63.588786667,"alt":16.800,"epx":9.690,"epy":12.154,"epv":48.530,"track":337.7200,"speed":0.077,"climb":0.000,"eps":24.31,"epc":97.06}
+{"class":"TPV","device":"/dev/ttyS0","mode":3,"time":"2018-06-03T17:59:45.000Z","ept":0.005,"lat":44.671385000,"lon":-63.588786667,"alt":16.800,"epx":9.690,"epy":12.154,"epv":20.700,"speed":0.000,"climb":0.000,"eps":24.31,"epc":69.23}
+{"class":"TPV","device":"/dev/ttyS0","mode":3,"time":"2018-06-03T17:59:45.000Z","ept":0.005,"lat":44.671385000,"lon":-63.588786667,"alt":16.800,"epx":9.690,"epy":12.154,"epv":20.700,"track":296.5800,"speed":0.082,"climb":0.000,"eps":24.31,"epc":69.23}
+{"class":"TPV","device":"/dev/ttyS0","mode":3,"time":"2018-06-03T17:59:46.000Z","ept":0.005,"lat":44.671385000,"lon":-63.588788333,"alt":16.800,"epx":9.690,"epy":12.154,"epv":20.700,"speed":0.132,"climb":0.000,"eps":24.31,"epc":41.40}
+{"class":"SKY","device":"/dev/ttyS0","xdop":0.65,"ydop":0.81,"vdop":0.90,"tdop":1.15,"hdop":1.33,"gdop":2.27,"pdop":1.60,"satellites":[{"PRN":11,"el":81,"az":116,"ss":30,"used":true},{"PRN":18,"el":65,"az":88,"ss":19,"used":true},{"PRN":1,"el":65,"az":156,"ss":26,"used":true},{"PRN":28,"el":52,"az":309,"ss":32,"used":true},{"PRN":30,"el":51,"az":244,"ss":18,"used":true},{"PRN":8,"el":42,"az":63,"ss":31,"used":true},{"PRN":7,"el":39,"az":204,"ss":13,"used":true},{"PRN":120,"el":20,"az":122,"ss":0,"used":false},{"PRN":17,"el":16,"az":258,"ss":25,"used":true},{"PRN":22,"el":16,"az":130,"ss":0,"used":false},{"PRN":10,"el":8,"az":34,"ss":0,"used":false},{"PRN":13,"el":7,"az":301,"ss":0,"used":false},{"PRN":27,"el":6,"az":71,"ss":0,"used":false},{"PRN":3,"el":3,"az":151,"ss":0,"used":false}]}
+{"class":"TPV","device":"/dev/ttyS0","mode":3,"time":"2018-06-03T17:59:46.000Z","ept":0.005,"lat":44.671385000,"lon":-63.588788333,"alt":16.800,"epx":9.690,"epy":12.154,"epv":20.700,"track":345.3600,"speed":0.067,"climb":0.000,"eps":24.31,"epc":41.40}
+{"class":"TPV","device":"/dev/ttyS0","mode":3,"time":"2018-06-03T17:59:47.000Z","ept":0.005,"lat":44.671386667,"lon":-63.588788333,"alt":16.800,"epx":9.690,"epy":12.154,"epv":20.700,"speed":0.185,"climb":0.000,"eps":24.31,"epc":41.40}
+{"class":"TPV","device":"/dev/ttyS0","mode":3,"time":"2018-06-03T17:59:47.000Z","ept":0.005,"lat":44.671386667,"lon":-63.588788333,"alt":16.800,"epx":9.690,"epy":12.154,"epv":20.700,"track":47.6400,"speed":0.041,"climb":0.000,"eps":24.31,"epc":41.40}
+{"class":"TPV","device":"/dev/ttyS0","mode":3,"time":"2018-06-03T17:59:48.000Z","ept":0.005,"lat":44.671386667,"lon":-63.588786667,"alt":16.800,"epx":9.690,"epy":12.154,"epv":48.530,"speed":0.132,"climb":0.000,"eps":24.31,"epc":69.23}
+{"class":"TPV","device":"/dev/ttyS0","mode":3,"time":"2018-06-03T17:59:48.000Z","ept":0.005,"lat":44.671386667,"lon":-63.588786667,"alt":16.800,"epx":9.690,"epy":12.154,"epv":48.530,"track":178.4500,"speed":0.051,"climb":0.000,"eps":24.31,"epc":69.23}
