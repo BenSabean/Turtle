@@ -10,9 +10,11 @@
 
 from smbus import SMBus
 from time import sleep
+import RPi.GPIO as GPIO
 import sys
 
-
+# Functions
+# Calculating CRC for a number of bytes #
 def CRC(val):
   crc = 0
   for byte in val:
@@ -23,16 +25,36 @@ def CRC(val):
         crc = crc & 0xFF
   return crc
 
+# Definitions
+ARDUINO = 0x05
+SLEEP_CMD = 0x01
+RELEASE_CMD = 0x01
+CHECK_CMD = 0xAA
+ALIVE = 17
 
-ARDUINO = 0x08
-DELAY = 2
+# Setting Alive pin HIGH
+GPIO.setmode(GPIO.BCM)
+GPIO.setwarnings(False)
+GPIO.setup(ALIVE, GPIO.OUT)
+GPIO.output(ALIVE, GPIO.HIGH)
+
+# i2c bus
 bus = SMBus(1)
 
 print("Starting")
-num = [10, 30]
-num.append(CRC(num))
-bus.write_block_data(ARDUINO, 0xAA, num)
-print(num)
+msg = [0, 2]
+msg.append(CRC(msg))
+bus.write_block_data(ARDUINO, SLEEP_CMD, msg)
+print("Sent: ", msg)
+
+sleep(2)
+print("Sent: ", CHECK_CMD)
+resp = bus.read_block_data(ARDUINO, CHECK_CMD)
+try:
+  print("Got: "+str(resp[0])+str(resp[1]))
+except Exception as e:
+  print e
+
 
 '''
 bus.write_byte(ARDUINO,num[0])
