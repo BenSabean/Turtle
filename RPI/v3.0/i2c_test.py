@@ -8,27 +8,18 @@
 #
 
 
-from smbus import SMBus
+#from smbus import SMBus
 from time import sleep
 import RPi.GPIO as GPIO
 import sys
+from smbus2 import SMBusWrapper, i2c_msg,  SMBus
 
 # Functions
-# Calculating CRC for a number of bytes #
-def CRC(val):
-  crc = 0
-  for byte in val:
-        for bitnumber in range(0,8):
-            if ( byte ^ crc ) & 0x80 : crc = ( crc << 1 ) ^ 0x31
-            else                     : crc = ( crc << 1 )
-            byte = byte << 1
-        crc = crc & 0xFF
-  return crc
 
 # Definitions
 ARDUINO = 0x05
 SLEEP_CMD = 0x01
-RELEASE_CMD = 0x01
+RELEASE_CMD = 0x02
 CHECK_CMD = 0xAA
 ALIVE = 17
 
@@ -39,6 +30,24 @@ GPIO.setup(ALIVE, GPIO.OUT)
 GPIO.output(ALIVE, GPIO.HIGH)
 
 # i2c bus
+# Single transaction writing two bytes then read two at address 80
+with SMBusWrapper(1) as bus:
+    print bus.read_i2c_block_data(ARDUINO, CHECK_CMD, 2)
+    sleep(3)
+    print "Send release for 2 min"
+    bus.write_i2c_block_data(ARDUINO, SLEEP_CMD, [0,2])
+    sleep(3)
+    print bus.read_i2c_block_data(ARDUINO, CHECK_CMD, 2)
+    sleep(3)
+    print "Send sleep for 2 min"
+    bus.write_i2c_block_data(ARDUINO, RELEASE_CMD, [0,2])
+    sleep(3)
+    print bus.read_i2c_block_data(ARDUINO, CHECK_CMD, 2)
+    sleep(10)
+    print "ALIVE pin = Low"
+    GPIO.output(ALIVE, GPIO.LOW)
+
+'''
 bus = SMBus(1)
 
 print("Starting")
@@ -54,7 +63,7 @@ try:
   print("Got: "+str(resp[0])+str(resp[1]))
 except Exception as e:
   print e
-
+'''
 
 '''
 bus.write_byte(ARDUINO,num[0])
@@ -71,4 +80,3 @@ for i in range(0, 10):
 	print("Send "+str(i))
 	sleep(DELAY)
 '''
-
