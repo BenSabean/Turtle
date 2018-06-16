@@ -31,4 +31,5 @@
     $ gpsmon /dev/ttyS0 [verify GPS packets comming throught]
     $ cgps -s
 
-
+- Configure timezone
+    $ sudo dpkg-reconfigure tzdata 

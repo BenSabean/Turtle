@@ -44,7 +44,7 @@ class SetupFile():
         _start = self.toMin(self.start)+1440
         _end = self.toMin(self.end)
         s_dur = _start - _end
-        hr = int(s_dur/24)
+        hr = int(s_dur/60)
         m = s_dur%60
         return [hr, m]
 
