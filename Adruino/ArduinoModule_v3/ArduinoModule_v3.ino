@@ -16,11 +16,12 @@
 #include <Wire.h>         // I2C protocol library
 //#include <LowPower.h>     // Decreases Power consumption
 
-#define VALVE       2     // Release MOSFET control (HIGH-ON, LOW-OFF)
+#define VALVE       7     // Release MOSFET control (HIGH-ON, LOW-OFF)
 #define BATTERY     A1    // Battery Monitor pin
 #define POWER       12    // Pi Power MOSFET control (LOW-ON, HIGH-OFF)
 #define ALIVE       11    // Checking Pi Status
 #define LED         10    // Sleep mode indicator
+#define PCB_LED     13    // LED on the PCB
 
 #define I2C_ADDRESS 0x05
 #define SLEEP_CODE  0x01
@@ -44,12 +45,13 @@ void setup()
   pinMode(VALVE, OUTPUT);
   pinMode(POWER, OUTPUT);
   pinMode(LED, OUTPUT);
+  pinMode(PCB_LED, OUTPUT);
   pinMode(BATTERY, INPUT);
   pinMode(ALIVE, INPUT);
   pinMode(A4, INPUT);           // I2C pins setup
   pinMode(A5, INPUT);           // I2C pins setup
   digitalWrite(VALVE, LOW);     // Valve OFF
-  digitalWrite(POWER, LOW);     // Starting the Pi on boot
+  digitalWrite(POWER, HIGH);   
   digitalWrite(LED, LOW);
 
   //  I2C setup  //
@@ -60,11 +62,21 @@ void setup()
   // Initializing timer var //
   Start = millis();
 
-  /*
-    //  DEBUG  //
-    Serial.begin(38400);           // start serial for output
-    Serial.println("START");
-  */
+  for (uint8_t i = 0; i < 15; i++)
+  {
+    digitalWrite(PCB_LED, HIGH);     // Valve OFF
+    delay(200);
+    digitalWrite(PCB_LED, LOW);     // Valve OFF
+    delay(200);
+  }
+  // Starting the Pi on boot
+  digitalWrite(POWER, LOW);     
+
+
+  //  DEBUG  //
+  //Serial.begin(38400);           // start serial for output
+  //Serial.println("START");
+
 }
 
 //  MAIN LOOP  //

@@ -19,7 +19,7 @@ class Timer():
     RELEASE_CMD = 0x02
     CHECK_CMD = 0xAA
 
-    # set sleep time for arduino and return result
+    # set sleep time for arduino
     def setSleep(self, hour, min):
         with SMBusWrapper(1) as bus:
            bus.write_i2c_block_data(self.ARDUINO, self.SLEEP_CMD, [hour,min])
@@ -29,7 +29,7 @@ class Timer():
                return True
         return False
 
-    # set release time for arduino and return result
+    # set release time for arduino
     def setRelease(self, hour, min):
         with SMBusWrapper(1) as bus:
            bus.write_i2c_block_data(self.ARDUINO, self.RELEASE_CMD, [hour,min])
@@ -39,7 +39,7 @@ class Timer():
                return True
         return False
 
-    # return array of two status flags from arduino [sleep, release]
+    # return array of two status flags [sleep, release]
     def checkStatus(self):
         with SMBusWrapper(1) as bus:
            return bus.read_i2c_block_data(self.ARDUINO, self.CHECK_CMD, 2)

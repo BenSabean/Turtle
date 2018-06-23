@@ -2,33 +2,6 @@
 # Code to test GPS
 #
 
-from gps_class import GPS_class
-import os
-import time
-
-
-USB = "/home/pi/USB"
-
-print "start"
-gps_cs = GPS_class(USB)
-gps_cs.setTime()
-
-for i in range (0, 30):
-    os.system("clear")
-    try:
-        gps_cs.dumpData()
-    except Exception as e:
-        print e
-        raise
-    time.sleep(1)
-
-print "\n\nfinished"
-gps_cs.close()
-quit()
-
-
-
-'''
 import gps
  
 # Listen on port 2947 (gpsd) of localhost
@@ -67,4 +40,3 @@ while True:
     except StopIteration:
 		session = None
 		print "GPSD has terminated"
-'''
