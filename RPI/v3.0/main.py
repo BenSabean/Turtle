@@ -136,7 +136,7 @@ while REC_DUR > 0 or poll == None:
         break   # exiting the main loop when switch pulled low
 
     io.setRec()
-    gps.writeCSV()
+    log.write(gps.writeCSV())
     sleep(1)
     poll = camera.poll()
 # -----------------------------------------------
@@ -157,7 +157,6 @@ else:
     else:
         log.write("sleep failed")
 
-gps.close()
 io.blink(10)         # indicate code termination
 io.clear()          # turn off both LED's
-sys.exit()
+quit()

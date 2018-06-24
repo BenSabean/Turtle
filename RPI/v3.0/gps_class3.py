@@ -1,36 +1,15 @@
 #! /usr/bin/python
 
-import os
-from gps import *
-import time
+import os, time
 import threading
+from gps import *
 import csv
 
-# Class to run thread for GPSD
-class GpsPoller(threading.Thread):
-    # starts the Thread
-    def __init__(self):
-        threading.Thread.__init__(self)
-        self.session = gps(mode=WATCH_ENABLE)
-        self.current_value = None
-
-    # get the most recent buffered value
-    def get_current_value(self):
-        return self.current_value
-
-    # keeps the thread running listening to gpsd data
-    def run(self):
-        try:
-            while True:
-                self.current_value = self.session.next()
-                time.sleep(0.2) # tune this, you might not get values that quickly
-        except StopIteration:
-            pass
 
 # Class to interract with the gps and save CSV
 class GPS_class():
-  gpsp = None                          # Thread to read form gpsd
   fname = ""                           # CSV file name
+  session = None
 
   # function that check existence of a file
   def FileNamer(self, file, ext):
@@ -47,10 +26,8 @@ class GPS_class():
 
   # init function, starts gps thread
   def __init__(self, usb_path):
-    self.gpsp = GpsPoller()             # create the thread
-    self.gpsp.start()                   # start it up
-    self.setTime()                      # set system time
-    # generate filename for CSV
+    self.session = gps.gps("localhost", "2947")
+    self.session.stream(gps.WATCH_ENABLE | gps.WATCH_NEWSTYLE)
     self.fname = self.FileNamer(usb_path + time.strftime("%d_%m_%Y"), "csv")
 
   # function to write one row of data into CSV, only when fix is detected
@@ -62,7 +39,7 @@ class GPS_class():
         writer.writerow(('mode','time','speed','longitute','latitude','altitude','track'))
     # write data row if fix present
     try:
-        report = self.gpsp.get_current_value()
+        report = self.session.next()
         if report['class'] == 'TPV' and report['mode'] != '1':
             row = []
             with open(self.fname, "wb") as fdata:
@@ -85,7 +62,7 @@ class GPS_class():
   def dumpData(self):
     os.system('clear')
     try:
-        report = self.gpsp.get_current_value()
+    	report = self.session.next()
         # Time Position Velocity Report
         if report['class'] == 'TPV':
             # To see all report data, uncomment the line below
@@ -101,12 +78,7 @@ class GPS_class():
             print " "
     except: pass
 
-  # get time from GPS and set system time
+  # should be set automatically from gpsd
   def setTime(self):
     time.sleep(10)                      # wait for gps to read date properly
     #date_time = time.strptime("%d_%m_%Y"), self.gpsd.utc)
-
-  # closing threads 
-  def close(self):
-    self.gpsp.running = False
-    self.gpsp.join()               # wait for the thread to finish what it's doing
