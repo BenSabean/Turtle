@@ -17,7 +17,6 @@ DUR =               5               # video duration in minutes
 VIDEO_SECTION =     2               # video sections duration
 TEMP_FOLDER =       "/home/pi/Video/"
 USB_FOLDER =        "/home/pi/USB/"
-TERM_SEM =          "/home/pi/semaphore/terminate.sem"
 SETUP_FILE =        USB_FOLDER + "setup.txt"
 LOG_FILE =          USB_FOLDER + "log.txt"
 # Global Variables
@@ -47,26 +46,24 @@ def move(old_path, new_path):
     os.system("sudo rm "+OLD_FILE)
     
 # Objects
-log = LogClass(LOG_FILE)            # Log file object
-timer = Timer()                     # Arduino COM object
-setup_file = SetupFile(SETUP_FILE)  # Setup file object
-io = Gpio_class()                   # GPIO class (switch,led,alive)
+log = LogClass(LOG_FILE)                # Log file object
+timer = Timer()                         # Arduino COM object
+setup_file = SetupFile(SETUP_FILE)      # Setup file object
+io = Gpio_class()                       # GPIO class (switch,led,alive)
 io.clear()
 
 # unmounting USB
 os.system("sudo umount /dev/sda1")
-# Removing old files
-os.system("sudo rm "+TEMP_FOLDER+"*")
-os.system("sudo rm "+USB_FOLDER+"*")
-# mounting USB
-os.system("sudo mount /dev/sda1 "+USB_FOLDER)
+os.system("sudo rm "+TEMP_FOLDER+"*")   # Removing temp files
+os.system("sudo rm "+USB_FOLDER+"*")    # Removing old usb files
+os.system("sudo mount /dev/sda1 "+USB_FOLDER) # mounting USB
 
 # GPS object
 gps = GPS_class(USB_FOLDER)
 gps.setTime()
 
 log.write("START")
-io.blink(10)                         # indicate beginning of the code
+io.blink(10)                            # indicate beginning of the code
 # getting full deployment duration and sending to arduino
 # checking if release time has been set
 flag = timer.checkStatus()
@@ -84,6 +81,8 @@ if flag[1] == 0:
         log.write(str(exp))
         pass
     
+# record battery voltage
+log.write("battery voltage is "+timer.getVoltage()+"v")
 # getting recording duration
 REC_DUR = setup_file.getParam("recording")
 log.write("recording time is "+str(REC_DUR)+" min")
@@ -127,7 +126,7 @@ while REC_DUR > 0 or poll == None:
     # ------
 
     # Checking termination semaphore
-    #TERM = io.checkSwitch()
+    TERM = io.checkSwitch()
     TERM = False
     if TERM == True:
         # closing current camera program

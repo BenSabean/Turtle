@@ -7,6 +7,8 @@
 # ...
 # 
 
+import datetime
+
 class SetupFile():
     filepath = "/home/pi/USB/setup.txt"
     delim = '='
@@ -56,9 +58,13 @@ class SetupFile():
     def calcSleep(self):
         try:
             # Converting to minutes
-            _start = self.toMin(self.start)+1440
-            _end = self.toMin(self.end)
-            s_dur = _start - _end
+            _start = self.toMin(self.start)             # start time
+            _now = datetime.datetime.now()              # current time
+            _now = self.toMin(str(_now.hour)+":"+str(_now.minute))
+            # caculate sleep time 
+            if(_now > _start): _start += 1440
+            s_dur = _start - _now
+            # break down to [hh,mm]
             hr = int(s_dur/60)
             m = s_dur%60
             return [hr, m]
@@ -70,10 +76,19 @@ class SetupFile():
     # return recording interval in minutes (int)
     def calcRec(self):
         # Converting to minutes
-        _start = self.toMin(self.start)
-        _end = self.toMin(self.end)
-        if(_end > _start): return _end - _start
-        else:              return _start - _end
+        _start = self.toMin(self.start)             # start timeifconfig
+        _end = self.toMin(self.end)                 # end time
+        _now = datetime.datetime.now()              # current time
+        _now = self.toMin(str(_now.hour)+":"+str(_now.minute))
+        # check if start/end times are currect
+        if(_start > _end):
+            _temp = _start      # swap
+            _start = _end       # swap
+            _end = _temp        # swap
+        # past recording time
+        if(_now > _end or _now < _start): return 0
+        # in the recording zone
+        return _end - _now
 
     # convert from string [hh]:[mm] to int min
     def toMin(self, str_time):

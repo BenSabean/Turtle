@@ -24,7 +24,7 @@ class Timer():
         with SMBusWrapper(1) as bus:
            bus.write_i2c_block_data(self.ARDUINO, self.SLEEP_CMD, [hour,min])
            sleep(0.5)
-           resp = bus.read_i2c_block_data(self.ARDUINO, self.CHECK_CMD, 2)
+           resp = bus.read_i2c_block_data(self.ARDUINO, self.CHECK_CMD, 4)
            if(resp[0] == 1):
                return True
         return False
@@ -34,7 +34,7 @@ class Timer():
         with SMBusWrapper(1) as bus:
            bus.write_i2c_block_data(self.ARDUINO, self.RELEASE_CMD, [hour,min])
            sleep(0.5)
-           resp = bus.read_i2c_block_data(self.ARDUINO, self.CHECK_CMD, 2)
+           resp = bus.read_i2c_block_data(self.ARDUINO, self.CHECK_CMD, 4)
            if(resp[1] == 1):
                return True
         return False
@@ -42,4 +42,15 @@ class Timer():
     # return array of two status flags from arduino [sleep, release]
     def checkStatus(self):
         with SMBusWrapper(1) as bus:
-           return bus.read_i2c_block_data(self.ARDUINO, self.CHECK_CMD, 2)
+           return bus.read_i2c_block_data(self.ARDUINO, self.CHECK_CMD, 4)
+
+    # getting battery voltage from arduino
+    def getVoltage(self):
+        with SMBusWrapper(1) as bus:
+            resp = bus.read_i2c_block_data(self.ARDUINO, self.CHECK_CMD, 4)
+            try:
+                vol = (resp[3] << 8) | resp[2]
+                vol = float(vol)/1024 * 5
+                return str(vol)
+            except: pass
+        
