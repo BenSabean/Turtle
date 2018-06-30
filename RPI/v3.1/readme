@@ -1,0 +1,73 @@
+# Documentation
+
+- in raspi-config (interfaces):
+    Disable: Serial - ssh over serial
+    Enable: I2C, Camera, 1-Wire, Serial - hardware
+
+- To enable UART:
+    $ sudo nano /boot/config.txt add enable_uart=1
+    # disable serial login shell in raspi-config
+    $ sudo apt-get install python-serial
+
+- Increased GPU memory from 128 to 256 (potential problem might be GPU overheating)
+
+- Installed exFAT support:
+    $ sudo apt-get install exfat-utils exfat-fuse
+
+- Install python SMBuss module for I2C:
+    $ sudo apt-get install python-smbus python3-smbus python-dev python3-dev
+    $ sudo apt-get install i2c-tools
+    in config.txt add dtparam=i2c1=on and dtparam=i2c_arm=on
+    $ i2cdetect -y 1
+
+- Install gpsd module: 
+    $ sudo apt-get install gpsd gpsd-clients python-gps
+    $ sudo killall gpsd
+    Modify -- /etc/default/gpsd ----
+    START_DAEMON="true"
+    USBAUTO="true"
+    DEVICES="/dev/ttyS0"
+    GPSD_OPTIONS="-n"
+    GPSD_SOCKET="/var/run/gpsd.sock"
+    --------------------------------
+    $ sudo ln -s /lib/systemd/system/gpsd.service /etc/systemd/system/multi-user.target.wants/
+    Modify -- /lib/systemd/system/gpsd.service ----
+    [Install]
+    WantedBy=multi-user.target
+    Also=gpsd.socket
+    --------------------------------
+    $ sudo usermod --append --group dialout gpsd
+    $ sudo service gpsd start
+    Troubleshooting:
+    $ gpsmon /dev/ttyS0 [verify GPS packets comming throught]
+    $ cgps -s
+
+- Configure timezone
+    $ sudo dpkg-reconfigure tzdata 
+
+- install ntp:
+    $
+- Sync time from GPS with NTP:
+    in /etc/ntp.conf add ---------------------------------------
+        # Read the rough GPS time from device 127.127.28.0
+        # Read the accurate PPS time from device 127.127.28.1
+
+        (new version)
+        server 127.127.28.0
+        fudge 127.127.28.0 time1 0.420 refid GPS
+
+        server 127.127.28.1 prefer
+        fudge 127.127.28.1 refid GPS1
+
+        (older than ntp-4.2.5p138)
+        server 127.127.28.0 minpoll 4 maxpoll 4
+        fudge 127.127.28.0 time1 0.420 refid GPS
+
+        server 127.127.28.1 minpoll 4 maxpoll 4 prefer
+        fudge 127.127.28.1 refid GPS1
+    -----------------------------------------------------------
+    test with:
+    $ ntpq -p
+
+
+    SidalRg

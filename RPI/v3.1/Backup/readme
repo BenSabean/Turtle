@@ -1,0 +1,35 @@
+# Documentation
+
+- To enable UART:
+    $ sudo nano /boot/config.txt add enable_uart=1
+    # disable serial login shell in raspi-config
+    $ sudo apt-get install python-serial
+
+- Increased GPU memory from 128 to 256 (potential problem might be GPU overheating)
+
+- Installed exFAT support:
+    $ sudo apt-get install exfat-utils exfat-fuse
+
+- Install python SMBuss module for I2C:
+    $ sudo apt-get install python-smbus python3-smbus python-dev python3-dev
+    $ sudo apt-get install i2c-tools
+    in config.txt add dtparam=i2c1=on and dtparam=i2c_arm=on
+    $ i2cdetect -y 1
+
+- Install gpsd module: 
+    $ sudo apt-get install gpsd gpsd-clients python-gps
+    $ sudo killall gpsd
+    Modify -- /etc/default/gpsd ----
+    START_DAEMON="true"
+    USBAUTO="true"
+    DEVICES="/dev/ttyS0"
+    GPSD_OPTIONS="-n"
+    GPSD_SOCKET="/var/run/gpsd.sock"
+    --------------------------------
+    $ sudo ln -s /lib/systemd/system/gpsd.service /etc/systemd/system/multi-user.target.wants/
+    Troubleshooting:
+    $ gpsmon /dev/ttyS0 [verify GPS packets comming throught]
+    $ cgps -s
+
+- Configure timezone
+    $ sudo dpkg-reconfigure tzdata 

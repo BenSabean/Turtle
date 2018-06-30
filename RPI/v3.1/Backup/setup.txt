@@ -1,0 +1,10 @@
+
+
+duration= 10990
+start= 10:30 
+end= 20:10
+width= 1620
+height= 922
+fps= 25
+rotation= 180
+
