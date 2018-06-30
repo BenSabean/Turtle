@@ -53,7 +53,7 @@ class GPS_class():
     if not os.path.isfile(self.fname):
       with open(self.fname, "wb") as fdata:
         writer = csv.writer(fdata, delimiter=',', quotechar='"', quoting=csv.QUOTE_NONE)
-        writer.writerow(('mode','time','speed','longitute','latitude','altitude','track'))
+        writer.writerow(('mode','time','speed','longitute','latitude','climb', 'altitude','track'))
       fdata.close()
 
   # function to write one row of data into CSV, only when fix is detected
@@ -89,9 +89,9 @@ class GPS_class():
     print " "
 
   # get time from GPS and set system time
-  #def setTime(self):
-  #time.sleep(10)                      # wait for gps to read date properly
-  #date_time = (time.strptime("%d_%m_%Y"), self.gpsd.utc)
+  def setTime(self):
+    time.sleep(10)                      # wait for gps to read date properly
+    os.system('sudo date +%Y%m%d%T -s \"{}\" --utc'.format(gpsd.utc))
 
   # closing threads
   def close(self):
@@ -104,7 +104,7 @@ if __name__ == "__main__":
   try:
     print("START")
     gps = GPS_class(USB_FOLDER)
-    #gps.setTime()
+    gps.setTime()
     while(1):
       gps.dumpData()
       gps.writeCSV()

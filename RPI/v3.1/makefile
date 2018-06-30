@@ -4,7 +4,7 @@ all:
 	#after the remote session has ended.
 	tmux new-session -d -s turtle
 	tmux send-keys 'python main.py' C-m
-	tmux detach -s turtle
+	#tmux detach -s turtle
 	#To reattach the session enter 'tmux attach -t turtle'
 	#To re-detach the session after attaching it enter
 	#CTR-B then "d" while in tmux

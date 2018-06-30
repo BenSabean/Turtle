@@ -48,7 +48,7 @@ def move(old_path, new_path):
 # Objects
 log = LogClass(LOG_FILE)                # Log file object
 timer = Timer()                         # Arduino COM object
-setup_file = SetupFile(SETUP_FILE)      # Setup file object
+#setup_file = SetupFile(SETUP_FILE)      # Setup file object
 io = Gpio_class()                       # GPIO class (switch,led,alive)
 io.clear()
 
@@ -60,7 +60,9 @@ os.system("sudo mount /dev/sda1 "+USB_FOLDER) # mounting USB
 
 # GPS object
 gps = GPS_class(USB_FOLDER)
-#gps.setTime()
+setup_file = SetupFile(SETUP_FILE)      # Setup file object
+gps.setTime()
+#sleep(10)
 
 log.write("START")
 io.blink(10)                            # indicate beginning of the code
@@ -89,7 +91,9 @@ log.write("recording time is "+str(REC_DUR)+" min")
 print("recording time is "+str(REC_DUR)+" min")
 # getting video sections
 section = setup_file.getParam("sections")
-if section > 0 and section <= 720: VIDEO_SECTION = section
+if section > 0 and section <= 720:
+	VIDEO_SECTION = section
+	PARAM[2] = str(VIDEO_SECTION*60*1000)
 log.write("recording sections "+str(VIDEO_SECTION)+" min")
 # video width
 width = setup_file.getParam("width")
@@ -109,19 +113,26 @@ while REC_DUR > 0 or poll == None:
     # checking if recording program finished
     if not poll == None:
         io.setRun()
+        os.system("echo \"CPU Temperature:\"  >> /home/pi/USB/log.txt")
+        os.system("/opt/vc/bin/vcgencmd measure_temp >> /home/pi/USB/log.txt")
         # substract interval from recording time
         REC_DUR -= VIDEO_SECTION
         log.write("time left: "+str(REC_DUR)+" min")
+        print("time left: "+str(REC_DUR)+" min")
         # assemble filename
         NEW_FILE = TEMP_FOLDER + datetime.datetime.now().strftime('%Y-%m-%d_%H_%M_%S') + ".h264"
         PARAM[4] = NEW_FILE             # parameter 4 is filename
         # start new camera recording
         camera = subprocess.Popen(PARAM,stdout = subprocess.PIPE,stderr = subprocess.STDOUT)
         log.write("camera pid: "+str(camera.pid))
+        print("camera pid: "+str(camera.pid))
         # move old file to USB
+        os.system("date")
         log.write("moving file: "+OLD_FILE+" to usb ...")
+        print("moving file: "+OLD_FILE+" to usb ...")
         move(OLD_FILE, USB_FOLDER)
         log.write("file moved")
+        print("file moved")
         # updating prev file
         OLD_FILE = NEW_FILE
     # ------
@@ -161,5 +172,5 @@ io.blink(10)         # indicate code termination
 io.clear()          # turn off both LED's
 log.write("FINISHED\n")
 gps.close()
-os.system("sudo shutdown -h now")
-#sys.exit()
+#os.system("sudo shutdown -h now")
+sys.exit()
